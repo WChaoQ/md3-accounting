@@ -25,7 +25,8 @@ data class UiState(
     val statsYear: Int = LocalDate.now().year,
     val lastDeleted: Expense? = null,
     val snackMessage: String? = null,
-    val snackActionLabel: String? = null
+    val snackActionLabel: String? = null,
+    val ready: Boolean = false
 )
 
 class ExpenseViewModel(private val repo: ExpenseRepository) : ViewModel() {
@@ -57,9 +58,10 @@ class ExpenseViewModel(private val repo: ExpenseRepository) : ViewModel() {
             statsYear = sy,
             lastDeleted = deleted,
             snackMessage = snackPair?.first,
-            snackActionLabel = snackPair?.second
+            snackActionLabel = snackPair?.second,
+            ready = true
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState())
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, UiState(ready = false))
 
     init {
         viewModelScope.launch { repo.ensureInitialized() }
@@ -108,7 +110,7 @@ class ExpenseViewModel(private val repo: ExpenseRepository) : ViewModel() {
         )
         viewModelScope.launch {
             repo.add(e)
-            snack.value = "\u5df2\u6dfb\u52a0" to null
+            snack.value = "已添加" to null
         }
     }
 
@@ -116,7 +118,7 @@ class ExpenseViewModel(private val repo: ExpenseRepository) : ViewModel() {
         viewModelScope.launch {
             val removed = repo.delete(id) ?: return@launch
             lastDeleted.value = removed
-            snack.value = "\u5df2\u5220\u9664\u8bb0\u5f55" to "\u64a4\u9500"
+            snack.value = "已删除记录" to "撤销"
         }
     }
 
@@ -125,7 +127,7 @@ class ExpenseViewModel(private val repo: ExpenseRepository) : ViewModel() {
         viewModelScope.launch {
             repo.restore(e)
             lastDeleted.value = null
-            snack.value = null
+            snack.value = "已恢复" to null
         }
     }
 
@@ -133,23 +135,24 @@ class ExpenseViewModel(private val repo: ExpenseRepository) : ViewModel() {
         snack.value = null
     }
 
-    fun toggleDark() {
+    fun setHue(hue: Int) {
         viewModelScope.launch {
-            val t = uiState.value.theme
-            repo.setTheme(t.copy(dark = !t.dark))
+            val current = uiState.value.theme
+            repo.setTheme(current.copy(hue = hue))
         }
     }
 
-    fun setHue(hue: Int) {
+    fun toggleDark() {
         viewModelScope.launch {
-            val t = uiState.value.theme
-            repo.setTheme(t.copy(hue = hue))
+            val current = uiState.value.theme
+            repo.setTheme(current.copy(dark = !current.dark))
         }
     }
 
     class Factory(private val repo: ExpenseRepository) : ViewModelProvider.Factory {
         @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T =
-            ExpenseViewModel(repo) as T
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return ExpenseViewModel(repo) as T
+        }
     }
 }

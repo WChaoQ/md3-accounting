@@ -4,11 +4,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,7 +34,6 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -48,7 +49,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -67,6 +67,16 @@ class MainActivity : ComponentActivity() {
         setContent {
             val vm: ExpenseViewModel = viewModel(factory = ExpenseViewModel.Factory(repo))
             val state by vm.uiState.collectAsState()
+
+            if (!state.ready) {
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFFF5F5F5))
+                )
+                return@setContent
+            }
+
             MD3AccountingTheme(hue = state.theme.hue, darkTheme = state.theme.dark) {
                 AccountingApp(vm, state)
             }
@@ -96,6 +106,7 @@ fun AccountingApp(vm: ExpenseViewModel, state: UiState) {
     }
 
     Scaffold(
+        modifier = Modifier.imePadding(),
         topBar = {
             TopAppBar(
                 title = {
@@ -132,9 +143,7 @@ fun AccountingApp(vm: ExpenseViewModel, state: UiState) {
                 NavigationBarItem(
                     selected = tab == 0,
                     onClick = { tab = 0 },
-                    icon = {
-                        Icon(Icons.Default.CalendarMonth, contentDescription = null)
-                    },
+                    icon = { Icon(Icons.Default.CalendarMonth, contentDescription = null) },
                     label = { Text("记账") },
                     colors = NavigationBarItemDefaults.colors(
                         indicatorColor = c.secondaryContainer
@@ -143,9 +152,7 @@ fun AccountingApp(vm: ExpenseViewModel, state: UiState) {
                 NavigationBarItem(
                     selected = tab == 1,
                     onClick = { tab = 1 },
-                    icon = {
-                        Icon(Icons.Default.BarChart, contentDescription = null)
-                    },
+                    icon = { Icon(Icons.Default.BarChart, contentDescription = null) },
                     label = { Text("统计") },
                     colors = NavigationBarItemDefaults.colors(
                         indicatorColor = c.secondaryContainer
@@ -184,14 +191,8 @@ fun AccountingApp(vm: ExpenseViewModel, state: UiState) {
                     state = state,
                     onChangeMonth = vm::changeMonth,
                     onStepYear = vm::stepYear,
-                    onOpenMonth = { idx ->
-                        vm.openMonth(idx)
-                        tab = 0
-                    },
-                    onPickDay = { idx ->
-                        vm.pickDay(idx)
-                        tab = 0
-                    }
+                    onOpenMonth = vm::openMonth,
+                    onPickDay = vm::pickDay
                 )
             }
         }
