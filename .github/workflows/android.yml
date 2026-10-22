@@ -20,22 +20,31 @@ jobs:
           java-version: "17"
           distribution: "temurin"
 
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Install Android command-line tools
+        run: |
+          ANDROID_HOME="$HOME/android-sdk"
+          mkdir -p "$ANDROID_HOME/cmdline-tools"
+          cd /tmp
+          curl -fsSL -o cmdtools.zip \
+            https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
+          unzip -q cmdtools.zip
+          # zip root is cmdline-tools/
+          mv cmdline-tools "$ANDROID_HOME/cmdline-tools/latest"
+          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
 
-      - name: Accept Android SDK licenses
+      - name: Accept licenses and install packages
         run: |
           mkdir -p "$ANDROID_HOME/licenses"
-          printf '%s\n' "24333f8a63b6825ea9c5514f83c2829b004d1fee" > "$ANDROID_HOME/licenses/android-sdk-license"
-          printf '%s\n' "84831b9409646a918e30573bab4c6c987be6ef0b" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
-          printf '%s\n' "d56f518747465265122ae4624306c6035ffade10" > "$ANDROID_HOME/licenses/android-googletv-license"
-          printf '%s\n' "33b6a2b64607f11b759f320ef9dff4ae5c47d97a" > "$ANDROID_HOME/licenses/google-gdk-license"
-          printf '%s\n' "e9acab5b5fbb460a0455985cc2cdd494" > "$ANDROID_HOME/licenses/mips-android-sysimage-license"
-          yes 2>/dev/null | sdkmanager --licenses >/dev/null 2>&1 || true
-
-      - name: Install SDK platform and build-tools
-        run: |
-          sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+          echo -e "24333f8a63b6825ea9c5514f83c2829b004d1fee" > "$ANDROID_HOME/licenses/android-sdk-license"
+          echo -e "84831b9409646a918e30573bab4c6c987be6ef0b" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
+          yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses >/dev/null || true
+          sdkmanager --sdk_root="$ANDROID_HOME" \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0"
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -46,7 +55,6 @@ jobs:
             gradle wrapper --gradle-version 8.9
           fi
           chmod +x ./gradlew
-          ls -la gradlew gradle/wrapper/
 
       - name: Build debug APK
         run: ./gradlew :app:assembleDebug --stacktrace --no-daemon
