@@ -13,9 +13,11 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.time.LocalDate
 import java.time.YearMonth
-import kotlin.math.imul
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "md3_accounting")
+
+/** 32-bit multiply (JS Math.imul equivalent) for deterministic demo seed. */
+private fun imul(a: Int, b: Int): Int = (a.toLong() * b.toLong()).toInt()
 
 class ExpenseRepository(private val context: Context) {
 
@@ -70,7 +72,6 @@ class ExpenseRepository(private val context: Context) {
         context.dataStore.edit { it[recordsKey] = json.encodeToString(list) }
     }
 
-    /** Fixed-seed demo data matching the web version logic (last year to current month). */
     private fun generateDemo(): List<Expense> {
         var seed = 20260101
         fun rnd(): Double {
@@ -78,7 +79,7 @@ class ExpenseRepository(private val context: Context) {
             var t = seed
             t = imul(t xor (t ushr 15), t or 1)
             t = t xor (t + imul(t xor (t ushr 7), t or 61))
-            return ((t xor (t ushr 14)) ushr 0).toUInt().toDouble() / 4294967296.0
+            return ((t xor (t ushr 14)).toUInt().toDouble()) / 4294967296.0
         }
         fun <T> pick(arr: List<T>): T = arr[(rnd() * arr.size).toInt()]
 
