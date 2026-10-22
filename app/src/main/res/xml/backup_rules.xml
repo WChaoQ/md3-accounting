@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
-    <include domain="sharedpref" path="." />
+    <include domain="database" path="md3_accounting.db" />
+    <include domain="database" path="md3_accounting.db-shm" />
+    <include domain="database" path="md3_accounting.db-wal" />
+    <include domain="file" path="datastore/" />
 </full-backup-content>
