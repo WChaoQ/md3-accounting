@@ -32,6 +32,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -46,7 +47,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.wchaoq.md3accounting.data.ExpenseRepository
@@ -109,12 +112,12 @@ fun AccountingApp(vm: ExpenseViewModel, state: UiState) {
                 },
                 actions = {
                     IconButton(onClick = { showTheme = true }) {
-                        Icon(Icons.Default.Palette, "主题颜色")
+                        Icon(Icons.Default.Palette, contentDescription = "主题颜色")
                     }
                     IconButton(onClick = { vm.toggleDark() }) {
                         Icon(
                             if (state.theme.dark) Icons.Default.LightMode else Icons.Default.DarkMode,
-                            "切换深色模式"
+                            contentDescription = "切换深色模式"
                         )
                     }
                 },
@@ -126,17 +129,27 @@ fun AccountingApp(vm: ExpenseViewModel, state: UiState) {
         },
         bottomBar = {
             NavigationBar(containerColor = c.surfaceContainerHigh) {
-                NavItem(
+                NavigationBarItem(
                     selected = tab == 0,
                     onClick = { tab = 0 },
-                    icon = Icons.Default.CalendarMonth,
-                    label = "记账"
+                    icon = {
+                        Icon(Icons.Default.CalendarMonth, contentDescription = null)
+                    },
+                    label = { Text("记账") },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = c.secondaryContainer
+                    )
                 )
-                NavItem(
+                NavigationBarItem(
                     selected = tab == 1,
                     onClick = { tab = 1 },
-                    icon = Icons.Default.BarChart,
-                    label = "统计"
+                    icon = {
+                        Icon(Icons.Default.BarChart, contentDescription = null)
+                    },
+                    label = { Text("统计") },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = c.secondaryContainer
+                    )
                 )
             }
         },
@@ -144,9 +157,9 @@ fun AccountingApp(vm: ExpenseViewModel, state: UiState) {
             SnackbarHost(snackHost) { data ->
                 Snackbar(
                     snackbarData = data,
-                    containerColor = androidx.compose.ui.graphics.Color(0xFF322F35),
-                    contentColor = androidx.compose.ui.graphics.Color(0xFFF5EFF7),
-                    actionColor = androidx.compose.ui.graphics.Color(0xFFD0BCFF),
+                    containerColor = Color(0xFF322F35),
+                    contentColor = Color(0xFFF5EFF7),
+                    actionColor = Color(0xFFD0BCFF),
                     shape = RoundedCornerShape(4.dp)
                 )
             }
@@ -187,8 +200,14 @@ fun AccountingApp(vm: ExpenseViewModel, state: UiState) {
     if (showTheme) {
         AlertDialog(
             onDismissRequest = { showTheme = false },
-            icon = { Icon(Icons.Default.Palette, null, tint = c.primary) },
-            title = { Text("主题颜色", modifier = Modifier.fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center) },
+            icon = { Icon(Icons.Default.Palette, contentDescription = null, tint = c.primary) },
+            title = {
+                Text(
+                    "主题颜色",
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center
+                )
+            },
             text = {
                 ThemeSwatches(
                     currentHue = state.theme.hue,
@@ -203,39 +222,4 @@ fun AccountingApp(vm: ExpenseViewModel, state: UiState) {
             shape = RoundedCornerShape(28.dp)
         )
     }
-}
-
-@Composable
-private fun NavItem(
-    selected: Boolean,
-    onClick: () -> Unit,
-    icon: ImageVector,
-    label: String
-) {
-    val c = LocalAppColors.current
-    NavigationBarItem(
-        selected = selected,
-        onClick = onClick,
-        icon = {
-            if (selected) {
-                androidx.compose.material3.Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = c.secondaryContainer,
-                    modifier = Modifier.size(width = 64.dp, height = 32.dp)
-                ) {
-                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
-                        Icon(icon, null, tint = c.onSecondaryContainer)
-                    }
-                }
-            } else {
-                Icon(icon, null, tint = c.onSurfaceVariant)
-            }
-        },
-        label = {
-            Text(label, color = if (selected) c.onSurface else c.onSurfaceVariant)
-        },
-        colors = NavigationBarItemDefaults.colors(
-            indicatorColor = androidx.compose.ui.graphics.Color.Transparent
-        )
-    )
 }
