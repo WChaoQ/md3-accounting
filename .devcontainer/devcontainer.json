@@ -1,0 +1,32 @@
+{
+  "name": "MD3 Accounting Android",
+  "image": "mcr.microsoft.com/devcontainers/java:1-17-bookworm",
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "17",
+      "installGradle": true,
+      "jdkDistro": "ms"
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/setup-android.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack",
+        "mathiasfrohlich.Kotlin",
+        "redhat.java"
+      ],
+      "settings": {
+        "java.configuration.updateBuildConfiguration": "automatic",
+        "java.jdt.ls.java.home": "/usr/local/sdkman/candidates/java/current"
+      }
+    }
+  },
+  "forwardPorts": [],
+  "remoteUser": "vscode",
+  "hostRequirements": {
+    "cpus": 4,
+    "memory": "8gb",
+    "storage": "32gb"
+  }
+}
