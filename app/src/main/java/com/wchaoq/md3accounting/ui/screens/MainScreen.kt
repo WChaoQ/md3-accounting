@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -84,10 +82,10 @@ fun MainScreen(
 
     Column(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 16.dp)
-            .padding(bottom = 16.dp),
+            .padding(bottom = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         SummaryCard("${ym.monthValue}月总支出", monthTotal)
@@ -192,6 +190,7 @@ private fun CalendarGrid(
     val cells = firstDow + days
     val rows = (cells + 6) / 7
     val c = LocalAppColors.current
+    val cellHeight = 56.dp
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         repeat(rows) { row ->
@@ -211,8 +210,7 @@ private fun CalendarGrid(
                         Box(
                             modifier = Modifier
                                 .weight(1f)
-                                .aspectRatio(1f / 1.15f)
-                                .heightIn(max = 68.dp)
+                                .height(cellHeight)
                                 .clip(RoundedCornerShape(14.dp))
                                 .then(
                                     if (isSel) Modifier.background(c.primary)
@@ -244,13 +242,11 @@ private fun CalendarGrid(
                                         fontWeight = if (isSel) FontWeight.Medium else FontWeight.Normal,
                                         maxLines = 1
                                     )
-                                } else {
-                                    Spacer(Modifier.height(12.dp))
                                 }
                             }
                         }
                     } else {
-                        Spacer(Modifier.weight(1f))
+                        Spacer(Modifier.weight(1f).height(cellHeight))
                     }
                 }
             }
