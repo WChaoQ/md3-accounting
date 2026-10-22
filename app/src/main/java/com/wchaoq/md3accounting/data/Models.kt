@@ -1,17 +1,15 @@
 package com.wchaoq.md3accounting.data
 
-import kotlinx.serialization.Serializable
-
-@Serializable
+/** Domain expense (date as yyyyMMdd int, amount in cents). */
 data class Expense(
     val id: String,
-    val date: String, // yyyy-MM-dd
+    val date: Int,
     val title: String,
-    val amount: Double
+    val amount: Long
 )
 
-@Serializable
 data class ThemePrefs(
     val hue: Int = 265,
-    val dark: Boolean = false
+    /** null = follow system until user toggles */
+    val dark: Boolean? = null
 )
