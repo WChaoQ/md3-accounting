@@ -238,7 +238,7 @@ class AccountingViewModel(
     }
 
     private fun csvCell(value: String): String {
-        if (value.none { it == ',' || it == '"' || it == '\\n' || it == '\\r' }) return value
+        if (value.none { it == ',' || it == '"' || it.code == 10 || it.code == 13 }) return value
         return "\"" + value.replace("\"", "\"\"") + "\""
     }
 
