@@ -40,10 +40,9 @@ class ExpenseRepository(private val context: Context) {
 
     suspend fun allExpenses(): List<Expense> = dao.getAll().map { it.toDomain() }
 
-    /** Replace an existing record while preserving its ID, date and creation time. */
+    /** Update an existing record; returns false when the record does not exist or the update fails. */
     suspend fun update(expense: Expense): Boolean = runCatching {
-        dao.insert(expense.toEntity())
-        true
+        dao.update(expense.toEntity()) > 0
     }.getOrDefault(false)
 
     /** @return removed expense, or null if not found */
