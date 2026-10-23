@@ -17,6 +17,10 @@ android {
         versionCode = 1
         versionName = "1.0.0"
         resourceConfigurations += listOf("zh-rCN")
+        dependenciesInfo {
+            includeInApk = false
+            includeInBundle = false
+        }
     }
 
     buildTypes {
@@ -39,10 +43,10 @@ android {
     buildFeatures {
         compose = true
     }
-    dependenciesInfo {
-        includeInApk = false
-        includeInBundle = false
-    }
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 dependencies {
