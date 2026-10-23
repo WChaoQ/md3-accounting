@@ -135,9 +135,9 @@ fun HomeScreen(
                         }
                         Text(
                             money(state.dayTotal),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.headlineSmall,
                             color = scheme.primary,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -230,7 +230,7 @@ private fun CalendarGrid(
     val cells = firstDow + days
     val rows = (cells + 6) / 7
     val scheme = MaterialTheme.colorScheme
-    val cellHeight = 56.dp
+    val cellHeight = 62.dp
 
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         repeat(rows) { row ->
@@ -265,7 +265,7 @@ private fun CalendarGrid(
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
                                     "$dayNum",
-                                    fontSize = 15.sp,
+                                    fontSize = 16.sp,
                                     fontWeight = FontWeight.Medium,
                                     color = when {
                                         isSel -> scheme.onPrimary
@@ -276,7 +276,7 @@ private fun CalendarGrid(
                                 if (total > 0) {
                                     Text(
                                         fmtAmount(total),
-                                        fontSize = 12.sp,
+                                        fontSize = 11.sp,
                                         color = if (isSel) scheme.onPrimary else scheme.onSurfaceVariant,
                                         fontWeight = if (isSel) FontWeight.Medium else FontWeight.Normal,
                                         maxLines = 1
