@@ -33,8 +33,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.platform.LocalContext
-import android.content.Intent
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.wchaoq.md3accounting.R
@@ -56,7 +54,6 @@ fun AccountingApp(
     var showTheme by rememberSaveable { mutableStateOf(false) }
     val snackHost = remember { SnackbarHostState() }
     val scheme = MaterialTheme.colorScheme
-    val context = LocalContext.current
 
     val theme by vm.themeState.collectAsStateWithLifecycle()
 
@@ -131,7 +128,6 @@ fun AccountingApp(
                     onGoToday = vm::goToday,
                     onSelectDate = vm::selectDate,
                     onSave = vm::saveExpense,
-                    onUpdate = vm::updateExpense,
                     onDelete = vm::deleteExpense
                 )
                 1 -> StatsScreen(
