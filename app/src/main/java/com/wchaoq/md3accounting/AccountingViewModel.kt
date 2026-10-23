@@ -1,5 +1,6 @@
 package com.wchaoq.md3accounting
 
+import androidx.compose.runtime.Immutable
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -32,6 +33,7 @@ data class SnackEvent(
     val isUndoDelete: Boolean = false
 )
 
+@Immutable
 data class HomeUiState(
     val yearMonth: YearMonth = YearMonth.now(),
     val selectedDate: LocalDate = LocalDate.now(),
@@ -41,6 +43,7 @@ data class HomeUiState(
     val dayTotal: Long = 0L
 )
 
+@Immutable
 data class StatsUiState(
     val yearMonth: YearMonth = YearMonth.now(),
     val statsYear: Int = LocalDate.now().year,
