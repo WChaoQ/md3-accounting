@@ -4,7 +4,7 @@ Material Design 3 风格的简约记账 Android App（Kotlin + Jetpack Compose�
 
 ## 功能
 
-- **记账页**：月总览、日历、当日列表、添加/删除 + Snackbar 撤销
+- **记账页**：月总览、日历、当日列表、添加/删除
 - **统计页**：日/月 Canvas 柱状图（按触摸 x 选中）
 - **主题**：8 种色相 + 深色模式（首次跟随系统）
 - **数据**：Room（支出，金额单位：分）+ DataStore（主题）
