@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,8 +20,13 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -38,6 +41,9 @@ import androidx.compose.ui.platform.LocalContext
 import android.content.Intent
 import androidx.core.content.FileProvider
 import java.io.File
+import java.time.LocalDate
+import java.time.Instant
+import java.time.ZoneId
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.wchaoq.md3accounting.R
@@ -57,10 +63,42 @@ fun AccountingApp(
 ) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var showTheme by rememberSaveable { mutableStateOf(false) }
-    var showAppearanceMenu by rememberSaveable { mutableStateOf(false) }
+    var showExportOptions by rememberSaveable { mutableStateOf(false) }
+    var dateDialog by rememberSaveable { mutableIntStateOf(0) }
+    var exportStart by remember { mutableStateOf<LocalDate?>(null) }
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = LocalDate.now().atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli())
     val snackHost = remember { SnackbarHostState() }
     val scheme = MaterialTheme.colorScheme
     val context = LocalContext.current
+
+    val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri != null) {
+            runCatching {
+                context.contentResolver.openInputStream(uri)?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
+            }.onSuccess { csv ->
+                if (csv != null) vm.importCsv(csv)
+            }.onFailure {
+                android.widget.Toast.makeText(context, "无法读取 CSV 文件", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    fun exportCsv(start: LocalDate? = null, end: LocalDate? = null) {
+        vm.exportCsv(start, end) { csv ->
+            val exportDir = File(context.cacheDir, "exports").apply { mkdirs() }
+            val suffix = if (start == null || end == null) "全部" else "${start}_${end}"
+            val csvFile = File(exportDir, "记账记录_$suffix.csv")
+            csvFile.writeText(csv, Charsets.UTF_8)
+            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", csvFile)
+            val sendIntent = Intent(Intent.ACTION_SEND).apply {
+                type = "text/csv"
+                putExtra(Intent.EXTRA_SUBJECT, csvFile.name)
+                putExtra(Intent.EXTRA_STREAM, uri)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            context.startActivity(Intent.createChooser(sendIntent, "导出记账记录"))
+        }
+    }
 
     val theme by vm.themeState.collectAsStateWithLifecycle()
 
@@ -87,36 +125,17 @@ fun AccountingApp(
                     }
                 },
                 actions = {
-                    Box {
-                        IconButton(onClick = { showAppearanceMenu = true }) {
-                            Icon(painterResource(R.drawable.ic_palette), contentDescription = "外观设置")
-                        }
-                        DropdownMenu(
-                            expanded = showAppearanceMenu,
-                            onDismissRequest = { showAppearanceMenu = false }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("主题颜色") },
-                                leadingIcon = {
-                                    Icon(painterResource(R.drawable.ic_palette), contentDescription = null)
-                                },
-                                onClick = { showAppearanceMenu = false; showTheme = true }
-                            )
-                            DropdownMenuItem(
-                                text = { Text(if (dark) "切换到浅色模式" else "切换到深色模式") },
-                                leadingIcon = {
-                                    Icon(
-                                        painterResource(if (dark) R.drawable.ic_light_mode else R.drawable.ic_dark_mode),
-                                        contentDescription = null
-                                    )
-                                },
-                                onClick = {
-                                    showAppearanceMenu = false
-                                    vm.toggleDark(systemDark)
-                                }
-                            )
-                        }
+                    IconButton(onClick = { showTheme = true }) {
+                        Icon(painterResource(R.drawable.ic_palette), contentDescription = "主题颜色")
                     }
+                    IconButton(onClick = { vm.toggleDark(systemDark) }) {
+                        Icon(
+                            painterResource(if (dark) R.drawable.ic_light_mode else R.drawable.ic_dark_mode),
+                            contentDescription = if (dark) "切换浅色模式" else "切换深色模式"
+                        )
+                    }
+                    TextButton(onClick = { importLauncher.launch("text/*") }) { Text("导入") }
+                    TextButton(onClick = { showExportOptions = true }) { Text("导出") }
                 }
             )
         },
@@ -158,28 +177,59 @@ fun AccountingApp(
                     onStepYear = vm::stepYear,
                     onOpenMonth = vm::openStatsMonth,
                     onPickDay = vm::pickStatsDay,
-                    onExportCsv = {
-                        vm.exportCsv { csv ->
-                            val exportDir = File(context.cacheDir, "exports").apply { mkdirs() }
-                            val date = java.time.LocalDate.now().toString()
-                            val csvFile = File(exportDir, "记账记录_$date.csv")
-                            csvFile.writeText(csv, Charsets.UTF_8)
-                            val uri = FileProvider.getUriForFile(
-                                context,
-                                "${context.packageName}.fileprovider",
-                                csvFile
-                            )
-                            val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                                type = "text/csv"
-                                putExtra(Intent.EXTRA_SUBJECT, "记账记录_$date.csv")
-                                putExtra(Intent.EXTRA_STREAM, uri)
-                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                            }
-                            context.startActivity(Intent.createChooser(sendIntent, "导出记账记录"))
-                        }
-                    }
+                    onExportCsv = {}
+
                 )
             }
+        }
+    }
+
+    if (showExportOptions) {
+        AlertDialog(
+            onDismissRequest = { showExportOptions = false },
+            title = { Text("导出 CSV") },
+            text = { Text("选择导出全部记录，或指定日期范围。") },
+            confirmButton = {
+                TextButton(onClick = {
+                    showExportOptions = false
+                    exportStart = null
+                    exportCsv()
+                }) { Text("全部导出") }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    showExportOptions = false
+                    datePickerState.selectedDateMillis = LocalDate.now().atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
+                    dateDialog = 1
+                }) { Text("选择日期范围") }
+            },
+            shape = RoundedCornerShape(28.dp)
+        )
+    }
+
+    if (dateDialog != 0) {
+        DatePickerDialog(
+            onDismissRequest = { dateDialog = 0 },
+            confirmButton = {
+                TextButton(onClick = {
+                    val picked = datePickerState.selectedDateMillis?.let {
+                        Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC")).toLocalDate()
+                    }
+                    if (picked != null && dateDialog == 1) {
+                        exportStart = picked
+                        datePickerState.selectedDateMillis = picked.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
+                        dateDialog = 2
+                    } else if (picked != null) {
+                        val startDate = exportStart
+                        dateDialog = 0
+                        if (startDate != null && !picked.isBefore(startDate)) exportCsv(startDate, picked)
+                        else android.widget.Toast.makeText(context, "结束日期不能早于开始日期", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }) { Text(if (dateDialog == 1) "下一步" else "导出") }
+            },
+            dismissButton = { TextButton(onClick = { dateDialog = 0 }) { Text("取消") } }
+        ) {
+            DatePicker(state = datePickerState, title = { Text(if (dateDialog == 1) "选择开始日期" else "选择结束日期") })
         }
     }
 
