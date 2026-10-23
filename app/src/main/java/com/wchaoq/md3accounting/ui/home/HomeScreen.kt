@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -42,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wchaoq.md3accounting.R
 import com.wchaoq.md3accounting.HomeUiState
+import com.wchaoq.md3accounting.data.Expense
 import com.wchaoq.md3accounting.ui.components.EmptyDay
 import com.wchaoq.md3accounting.ui.components.ExpenseItem
 import com.wchaoq.md3accounting.ui.components.MdCard
@@ -58,25 +60,24 @@ fun HomeScreen(
     onChangeMonth: (Int) -> Unit,
     onGoToday: () -> Unit,
     onSelectDate: (LocalDate) -> Unit,
-    onAdd: (String, Long) -> Unit,
+    onSave: (Expense?, String, Long) -> Unit,
     onDelete: (String) -> Unit
 ) {
     val ym = state.yearMonth
     val scheme = MaterialTheme.colorScheme
+    var editingExpense by remember(state.selectedDate) { mutableStateOf<Expense?>(null) }
 
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 0.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        item {
-            Spacer(Modifier.height(0.dp))
+        item(key = "month-summary") {
             SummaryCard("${ym.monthValue}月总支出", state.monthTotal)
         }
-
-        item {
+        item(key = "calendar") {
             MdCard {
-                Column(Modifier.padding(20.dp)) {
+                Column(Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
                             text = "${ym.year}年${ym.monthValue}月",
@@ -91,76 +92,77 @@ fun HomeScreen(
                             Icon(painterResource(R.drawable.ic_chevron_right), "下个月")
                         }
                     }
-                    Spacer(Modifier.height(12.dp))
+                    Spacer(Modifier.height(8.dp))
                     Row(Modifier.fillMaxWidth()) {
                         listOf("日", "一", "二", "三", "四", "五", "六").forEach {
                             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                                Text(
-                                    it,
-                                    style = MaterialTheme.typography.labelMedium,
-                                    color = scheme.onSurfaceVariant
-                                )
+                                Text(it, style = MaterialTheme.typography.labelMedium, color = scheme.onSurfaceVariant)
                             }
                         }
                     }
-                    Spacer(Modifier.height(6.dp))
+                    Spacer(Modifier.height(4.dp))
                     CalendarGrid(
                         yearMonth = ym,
                         selected = state.selectedDate,
                         today = LocalDate.now(),
                         dayTotals = state.dayTotals,
-                        onSelect = onSelectDate
+                        onSelect = { date ->
+                            editingExpense = null
+                            onSelectDate(date)
+                        }
                     )
                 }
             }
         }
-
-        item {
+        item(key = "day-header-form") {
             MdCard {
-                Column(Modifier.padding(20.dp)) {
+                Column(Modifier.padding(16.dp)) {
                     Row(
                         Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.Bottom
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        val d = state.selectedDate
                         Text(
-                            "${d.year}年${d.monthValue}月${d.dayOfMonth}日",
-                            style = MaterialTheme.typography.headlineMedium
+                            "${state.selectedDate.monthValue}月${state.selectedDate.dayOfMonth}日",
+                            style = MaterialTheme.typography.titleLarge
                         )
                         Column(horizontalAlignment = Alignment.End) {
-                            Text(
-                                "当日支出",
-                                style = MaterialTheme.typography.labelMedium,
-                                color = scheme.onSurfaceVariant
-                            )
+                            Text("当日支出", style = MaterialTheme.typography.labelMedium, color = scheme.onSurfaceVariant)
                             Text(
                                 money(state.dayTotal),
-                                style = MaterialTheme.typography.headlineMedium.copy(
-                                    fontSize = 22.sp,
-                                    color = scheme.primary
-                                ),
-                                fontWeight = FontWeight.Medium
+                                style = MaterialTheme.typography.titleLarge,
+                                color = scheme.primary,
+                                fontWeight = FontWeight.SemiBold
                             )
-                        }
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    if (state.dayItems.isEmpty()) {
-                        EmptyDay()
-                    } else {
-                        state.dayItems.forEach { e ->
-                            ExpenseItem(e) { onDelete(e.id) }
                         }
                     }
                     HorizontalDivider(
                         Modifier.padding(vertical = 12.dp),
                         color = scheme.outlineVariant.copy(alpha = 0.5f)
                     )
-                    AddExpenseForm(onAdd = onAdd)
+                    AddExpenseForm(
+                        editingExpense = editingExpense,
+                        onSave = { expense, title, amount ->
+                            onSave(expense, title, amount)
+                            editingExpense = null
+                        },
+                        onCancelEdit = { editingExpense = null }
+                    )
                 }
             }
-            Spacer(Modifier.height(24.dp))
         }
+        if (state.dayItems.isEmpty()) {
+            item(key = "empty-day") { EmptyDay() }
+        } else {
+            items(state.dayItems, key = { it.id }) { expense ->
+                ExpenseItem(
+                    expense = expense,
+                    onEdit = { editingExpense = expense },
+                    onDelete = { onDelete(expense.id) }
+                )
+            }
+        }
+        item(key = "bottom-space") { Spacer(Modifier.height(8.dp)) }
     }
 }
 
