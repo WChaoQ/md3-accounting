@@ -12,7 +12,7 @@ fun money(cents: Long): String {
 fun fmtAmount(cents: Long): String {
     val tenths = (cents.coerceAtLeast(0L) + 5L) / 10L
     if (tenths >= 100_000L) {
-        val tenThousandsTenths = (tenths + 500L) / 1_000L
+        val tenThousandsTenths = (tenths + 5_000L) / 10_000L
         val whole = tenThousandsTenths / 10L
         val decimal = tenThousandsTenths % 10L
         return if (decimal == 0L) "${whole}万" else "${whole}.${decimal}万"
