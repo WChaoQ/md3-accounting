@@ -95,7 +95,7 @@ fun StatsScreen(
                     values = state.dayVals,
                     labels = { i -> if (i == 0 || (i + 1) % 5 == 0) "${i + 1}" else "" },
                     highlightIndex = selectedDayIndex,
-                    chartHeight = 104.dp,
+                    chartHeight = 136.dp,
                     onBarClick = { index ->
                         selectedDayIndex = if (selectedDayIndex == index) -1 else index
                         if (selectedDayIndex >= 0) onPickDay(index)
@@ -145,7 +145,7 @@ fun StatsScreen(
                     values = state.monthVals,
                     labels = { i -> "${i + 1}月" },
                     highlightIndex = state.highlightMonthIndex,
-                    chartHeight = 104.dp,
+                    chartHeight = 112.dp,
                     onBarClick = { index ->
                         selectedDayIndex = -1
                         onOpenMonth(index)
@@ -197,7 +197,7 @@ fun StatsScreen(
             ) {
                 items(state.dayItems, key = { it.id }) { expense ->
                     Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 7.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
@@ -216,9 +216,10 @@ fun StatsScreen(
                         }
                         Text(
                             money(expense.amount),
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
-                            color = scheme.onSurface
+                            color = scheme.onSurface,
+                            maxLines = 1
                         )
                     }
                 }
