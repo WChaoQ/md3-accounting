@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,7 +18,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -67,7 +70,9 @@ fun HomeScreen(
     val ym = state.yearMonth
     val scheme = MaterialTheme.colorScheme
     var editingExpense by remember(state.selectedDate) { mutableStateOf<Expense?>(null) }
+    var showEntryDialog by remember(state.selectedDate) { mutableStateOf(false) }
 
+    Box(Modifier.fillMaxSize()) {
     LazyColumn(
         modifier = Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
@@ -115,43 +120,6 @@ fun HomeScreen(
                 }
             }
         }
-        item(key = "day-header-form") {
-            MdCard {
-                Column(Modifier.padding(16.dp)) {
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            "${state.selectedDate.monthValue}月${state.selectedDate.dayOfMonth}日",
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                        Column(horizontalAlignment = Alignment.End) {
-                            Text("当日支出", style = MaterialTheme.typography.labelMedium, color = scheme.onSurfaceVariant)
-                            Text(
-                                money(state.dayTotal),
-                                style = MaterialTheme.typography.titleLarge,
-                                color = scheme.primary,
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-                    HorizontalDivider(
-                        Modifier.padding(vertical = 12.dp),
-                        color = scheme.outlineVariant.copy(alpha = 0.5f)
-                    )
-                    AddExpenseForm(
-                        editingExpense = editingExpense,
-                        onSave = { expense, title, amount ->
-                            onSave(expense, title, amount)
-                            editingExpense = null
-                        },
-                        onCancelEdit = { editingExpense = null }
-                    )
-                }
-            }
-        }
         if (state.dayItems.isEmpty()) {
             item(key = "empty-day") { EmptyDay() }
         } else {
@@ -164,6 +132,43 @@ fun HomeScreen(
             }
         }
         item(key = "bottom-space") { Spacer(Modifier.height(8.dp)) }
+    }
+        item(key = "bottom-space") { Spacer(Modifier.height(88.dp)) }
+    }
+
+    FloatingActionButton(
+        onClick = {
+            editingExpense = null
+            showEntryDialog = true
+        },
+        modifier = Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 16.dp)
+    ) {
+        Icon(painterResource(R.drawable.ic_check), contentDescription = null)
+        Text("记一笔", modifier = Modifier.padding(start = 8.dp, end = 12.dp))
+    }
+    }
+
+    if (showEntryDialog) {
+        AlertDialog(
+            onDismissRequest = { showEntryDialog = false; editingExpense = null },
+            title = { Text(if (editingExpense == null) "添加支出" else "修改记录") },
+            text = {
+                AddExpenseForm(
+                    editingExpense = editingExpense,
+                    onSave = { expense, title, amount ->
+                        onSave(expense, title, amount)
+                        showEntryDialog = false
+                        editingExpense = null
+                    },
+                    onCancelEdit = {
+                        showEntryDialog = false
+                        editingExpense = null
+                    }
+                )
+            },
+            confirmButton = {},
+            shape = RoundedCornerShape(28.dp)
+        )
     }
 }
 
@@ -270,13 +275,13 @@ private fun AddExpenseForm(
     }
 
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedTextField(
                 value = title,
                 onValueChange = { if (it.length <= 30) title = it },
                 label = { Text("事项") },
                 singleLine = true,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
             )
             OutlinedTextField(
@@ -312,7 +317,7 @@ private fun AddExpenseForm(
                     imeAction = ImeAction.Done
                 ),
                 keyboardActions = KeyboardActions(onDone = { if (valid) submit() }),
-                modifier = Modifier.weight(0.7f)
+                modifier = Modifier.fillMaxWidth()
             )
         }
         Row(
