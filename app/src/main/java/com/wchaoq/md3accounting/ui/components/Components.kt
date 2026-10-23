@@ -87,6 +87,7 @@ fun SummaryCard(monthLabel: String, totalCents: Long) {
 @Composable
 fun ExpenseItem(
     expense: Expense,
+    onEdit: () -> Unit,
     onDelete: () -> Unit
 ) {
     val scheme = MaterialTheme.colorScheme
@@ -94,6 +95,7 @@ fun ExpenseItem(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
+            .clickable(onClick = onEdit)
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -156,7 +158,7 @@ fun EmptyDay() {
 
 @Composable
 fun BarChart(
-    values: LongArray,
+    values: List<Long>,
     labels: (Int) -> String,
     highlightIndex: Int,
     onBarClick: (Int) -> Unit,
