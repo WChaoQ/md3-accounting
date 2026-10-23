@@ -26,6 +26,13 @@ Material Design 3 风格的简约记账 Android App（Kotlin + Jetpack Compose�
 
 - JDK 17 / minSdk 26 / targetSdk 35
 
+## 下载与安装
+
+- 每次 `gpt` 分支构建成功后，GitHub Releases 会发布一个可安装的测试版 APK。
+- 下载文件名为 `app-release.apk`，下载后在 Android 系统中允许浏览器/文件管理器安装未知来源应用，再打开 APK 安装。
+- 当前 CI 版本使用 Android debug 签名以便侧载安装；这不是 Google Play 正式发布签名。不同 CI 构建使用的签名可能不同，更新时若提示签名不一致，需要先卸载旧版（先备份重要数据）。
+- 版本号：`1.0.1`（versionCode `2`）。
+
 ## 运行
 
 ```bash
