@@ -29,9 +29,9 @@ fun parseAmountToCents(raw: String): Long? {
     val parts = s.split('.')
     if (parts.size > 2) return null
     val wholeText = parts[0]
-    if (wholeText.length > 9 || (wholeText.isNotEmpty() && wholeText.any { !it.isDigit() })) return null
+    if (wholeText.length > 9 || (wholeText.isNotEmpty() && wholeText.any { it !in '0'..'9' })) return null
     if (parts.size == 2 && parts[1].length > 2) return null
-    if (parts.size == 2 && parts[1].any { !it.isDigit() }) return null
+    if (parts.size == 2 && parts[1].any { it !in '0'..'9' }) return null
     if (wholeText.isEmpty() && (parts.size == 1 || parts[1].isEmpty())) return null
     val whole = if (wholeText.isEmpty()) 0L else wholeText.toLongOrNull() ?: return null
     val fractionText = parts.getOrNull(1).orEmpty()
