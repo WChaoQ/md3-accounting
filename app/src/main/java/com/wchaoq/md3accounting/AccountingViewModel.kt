@@ -254,9 +254,18 @@ class AccountingViewModel(
         }
     }
 
-    fun exportCsv(onReady: (String) -> Unit) {
+    fun exportCsv(startDate: LocalDate? = null, endDate: LocalDate? = null, onReady: (String) -> Unit) {
         viewModelScope.launch {
-            val expenses = repo.allExpenses()
+            val expenses = withContext(Dispatchers.IO) {
+                repo.allExpenses().filter { expense ->
+                    val date = runCatching {
+                        LocalDate.of(expense.date / 10_000, (expense.date / 100) % 100, expense.date % 100)
+                    }.getOrNull()
+                    date != null &&
+                        (startDate == null || !date.isBefore(startDate)) &&
+                        (endDate == null || !date.isAfter(endDate))
+                }
+            }
             val csv = withContext(Dispatchers.Default) {
                 buildString {
                     appendLine("date,title,amount")
@@ -272,6 +281,59 @@ class AccountingViewModel(
             }
             onReady(csv)
         }
+    }
+
+    fun importCsv(raw: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val lines = raw.removePrefix("\uFEFF").lineSequence().filter { it.isNotBlank() }.toList()
+            if (lines.size < 2) {
+                snackChannel.send(SnackEvent("CSV 文件没有可导入的记录"))
+                return@launch
+            }
+            var imported = 0
+            lines.drop(1).forEach { line ->
+                val cells = parseCsvLine(line)
+                if (cells.size >= 3) {
+                    val date = runCatching {
+                        val parts = cells[0].trim().split('-')
+                        (parts[0].toInt() * 10_000) + (parts[1].toInt() * 100) + parts[2].toInt()
+                    }.getOrNull()
+                    val title = cells[1].trim()
+                    val amount = cells[2].trim().replace(",", "").toBigDecimalOrNull()
+                        ?.movePointRight(2)?.setScale(0, java.math.RoundingMode.HALF_UP)?.longValueExact()
+                    if (date != null && title.isNotBlank() && amount != null && amount > 0L) {
+                        val expense = Expense(UUID.randomUUID().toString(), date, title, amount)
+                        if (repo.add(expense)) imported++
+                    }
+                }
+            }
+            snackChannel.send(SnackEvent("已导入 $imported 条记录"))
+        }
+    }
+
+    private fun parseCsvLine(line: String): List<String> {
+        val cells = mutableListOf<String>()
+        val cell = StringBuilder()
+        var quoted = false
+        var i = 0
+        while (i < line.length) {
+            val ch = line[i]
+            when {
+                ch == '"' && quoted && i + 1 < line.length && line[i + 1] == '"' -> {
+                    cell.append('"')
+                    i++
+                }
+                ch == '"' -> quoted = !quoted
+                ch == ',' && !quoted -> {
+                    cells += cell.toString()
+                    cell.clear()
+                }
+                else -> cell.append(ch)
+            }
+            i++
+        }
+        cells += cell.toString()
+        return cells
     }
 
     private fun csvCell(value: String): String {
