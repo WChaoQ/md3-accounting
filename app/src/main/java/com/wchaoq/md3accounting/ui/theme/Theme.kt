@@ -15,7 +15,8 @@ fun MD3AccountingTheme(
     dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    // Wallpaper colors are available from Android 12; older devices use the fixed palette.\n    val context = LocalContext.current
+    // Wallpaper colors are available from Android 12; older devices use the fixed palette.
+    val context = LocalContext.current
     val scheme = if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
     } else {
