@@ -19,6 +19,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.Button
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -55,6 +58,8 @@ import com.wchaoq.md3accounting.util.fmtAmount
 import com.wchaoq.md3accounting.util.money
 import com.wchaoq.md3accounting.util.parseAmountToCents
 import java.time.LocalDate
+import java.time.Instant
+import java.time.ZoneId
 import java.time.YearMonth
 
 @Composable
@@ -71,6 +76,8 @@ fun HomeScreen(
     var editingExpense by remember(state.selectedDate) { mutableStateOf<Expense?>(null) }
     var showEntryDialog by remember(state.selectedDate) { mutableStateOf(false) }
     var deletingExpense by remember { mutableStateOf<Expense?>(null) }
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = state.selectedDate.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli())
 
     Box(Modifier.fillMaxSize()) {
         LazyColumn(
@@ -81,45 +88,6 @@ fun HomeScreen(
             item(key = "month-summary") {
                 SummaryCard("${ym.monthValue}月总支出", state.monthTotal)
             }
-            item(key = "calendar") {
-                MdCard {
-                    Column(Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "${ym.year}年${ym.monthValue}月",
-                                style = MaterialTheme.typography.titleLarge,
-                                modifier = Modifier.weight(1f)
-                            )
-                            TextButton(onClick = onGoToday) { Text("今天") }
-                            IconButton(onClick = { onChangeMonth(-1) }) {
-                                Icon(painterResource(R.drawable.ic_chevron_left), "上个月")
-                            }
-                            IconButton(onClick = { onChangeMonth(1) }) {
-                                Icon(painterResource(R.drawable.ic_chevron_right), "下个月")
-                            }
-                        }
-                        Spacer(Modifier.height(8.dp))
-                        Row(Modifier.fillMaxWidth()) {
-                            listOf("日", "一", "二", "三", "四", "五", "六").forEach {
-                                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                                    Text(it, style = MaterialTheme.typography.labelMedium, color = scheme.onSurfaceVariant)
-                                }
-                            }
-                        }
-                        Spacer(Modifier.height(4.dp))
-                        CalendarGrid(
-                            yearMonth = ym,
-                            selected = state.selectedDate,
-                            today = LocalDate.now(),
-                            dayTotals = state.dayTotals,
-                            onSelect = { date ->
-                                editingExpense = null
-                                onSelectDate(date)
-                            }
-                        )
-                    }
-                }
-            }
             item(key = "day-header") {
                 MdCard {
                     Row(
@@ -127,11 +95,19 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Column {
-                            Text(
-                                "${state.selectedDate.monthValue}月${state.selectedDate.dayOfMonth}日",
-                                style = MaterialTheme.typography.titleLarge
-                            )
+                        Column(Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    "${state.selectedDate.year}年${state.selectedDate.monthValue}月${state.selectedDate.dayOfMonth}日",
+                                    style = MaterialTheme.typography.titleLarge
+                                )
+                                IconButton(onClick = {
+                                    datePickerState.selectedDateMillis = state.selectedDate.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
+                                    showDatePicker = true
+                                }) {
+                                    Icon(painterResource(R.drawable.ic_chevron_down), "选择日期")
+                                }
+                            }
                             Text("当日支出", style = MaterialTheme.typography.labelMedium, color = scheme.onSurfaceVariant)
                         }
                         Text(
@@ -167,6 +143,25 @@ fun HomeScreen(
             modifier = Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 16.dp)
         ) {
             Text("+", style = MaterialTheme.typography.headlineMedium)
+        }
+    }
+
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        val date = Instant.ofEpochMilli(millis).atZone(ZoneId.of("UTC")).toLocalDate()
+                        editingExpense = null
+                        onSelectDate(date)
+                    }
+                    showDatePicker = false
+                }) { Text("确定") }
+            },
+            dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("取消") } }
+        ) {
+            DatePicker(state = datePickerState, title = { Text("选择日期") })
         }
     }
 
