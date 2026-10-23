@@ -134,8 +134,8 @@ class AccountingViewModel(
     private val statsYearData = monthSumsFlow.map { sums -> StatsYearData(sums) }
 
     val statsState: StateFlow<StatsUiState> = combine(
-        statsNav, statsMonthData, statsYearData
-    ) { nav, monthData, yearData ->
+        statsNav, statsMonthData, statsYearData, dayItemsFlow
+    ) { nav, monthData, yearData, dayItems ->
         val days = nav.ym.lengthOfMonth()
         val dayVals = MutableList(days) { 0L }
         monthData.daySums.forEach { sum ->
