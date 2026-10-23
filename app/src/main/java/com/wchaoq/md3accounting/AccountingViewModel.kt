@@ -71,9 +71,15 @@ class AccountingViewModel(
     private val yearMonth = MutableStateFlow(YearMonth.now())
     private val selectedDate = MutableStateFlow(LocalDate.now())
     // Statistics navigation is deliberately isolated from the accounting calendar.
-    private val statsMonth = MutableStateFlow(YearMonth.now())
-    private val statsSelectedDate = MutableStateFlow(LocalDate.now())
-    private val statsYear = MutableStateFlow(LocalDate.now().year)
+    private data class StatsNavState(
+        val yearMonth: YearMonth = YearMonth.now(),
+        val selectedDate: LocalDate = LocalDate.now(),
+        val year: Int = LocalDate.now().year
+    )
+    private val statsNavState = MutableStateFlow(StatsNavState())
+    private val statsMonth = statsNavState.map { it.yearMonth }
+    private val statsSelectedDate = statsNavState.map { it.selectedDate }
+    private val statsYear = statsNavState.map { it.year }
 
     private val snackChannel = Channel<SnackEvent>(Channel.BUFFERED)
     val snackEvents = snackChannel.receiveAsFlow()
@@ -134,9 +140,7 @@ class AccountingViewModel(
     private data class StatsMonthData(val daySums: List<com.wchaoq.md3accounting.data.local.DaySum>)
     private data class StatsYearData(val monthSums: List<com.wchaoq.md3accounting.data.local.MonthSum>)
 
-    private val statsNav = combine(statsMonth, statsYear, statsSelectedDate) { ym, sy, sel ->
-        StatsNav(ym, sy, sel)
-    }
+    private val statsNav = statsNavState.map { StatsNav(it.yearMonth, it.year, it.selectedDate) }
     private val statsMonthData = statsDaySumsFlow.map { sums -> StatsMonthData(sums) }
     private val statsYearData = monthSumsFlow.map { sums -> StatsYearData(sums) }
 
@@ -196,26 +200,36 @@ class AccountingViewModel(
     }
 
     fun changeStatsMonth(delta: Int) {
-        val next = statsMonth.value.plusMonths(delta.toLong())
-        statsMonth.value = next
-        val day = statsSelectedDate.value.dayOfMonth.coerceAtMost(next.lengthOfMonth())
-        statsSelectedDate.value = LocalDate.of(next.year, next.month, day)
+        val current = statsNavState.value
+        val next = current.yearMonth.plusMonths(delta.toLong())
+        statsNavState.value = current.copy(
+            yearMonth = next,
+            selectedDate = LocalDate.of(next.year, next.month, 1)
+        )
     }
 
     fun stepYear(delta: Int) {
-        statsYear.value += delta
+        val current = statsNavState.value
+        statsNavState.value = current.copy(year = current.year + delta)
     }
 
     fun openStatsMonth(monthIndex0: Int) {
-        val next = YearMonth.of(statsYear.value, monthIndex0 + 1)
-        statsMonth.value = next
-        statsSelectedDate.value = LocalDate.of(next.year, next.month, 1)
+        if (monthIndex0 !in 0..11) return
+        val current = statsNavState.value
+        val next = YearMonth.of(current.year, monthIndex0 + 1)
+        statsNavState.value = current.copy(
+            yearMonth = next,
+            selectedDate = LocalDate.of(next.year, next.month, 1)
+        )
     }
 
     fun pickStatsDay(dayIndex0: Int) {
-        val ym = statsMonth.value
+        val current = statsNavState.value
+        val ym = current.yearMonth
         if (dayIndex0 in 0 until ym.lengthOfMonth()) {
-            statsSelectedDate.value = LocalDate.of(ym.year, ym.month, dayIndex0 + 1)
+            statsNavState.value = current.copy(
+                selectedDate = LocalDate.of(ym.year, ym.month, dayIndex0 + 1)
+            )
         }
     }
 
