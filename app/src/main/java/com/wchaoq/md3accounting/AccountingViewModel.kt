@@ -71,6 +71,9 @@ class AccountingViewModel(
 
     private val yearMonth = MutableStateFlow(YearMonth.now())
     private val selectedDate = MutableStateFlow(LocalDate.now())
+    // Statistics navigation is deliberately isolated from the accounting calendar.
+    private val statsMonth = MutableStateFlow(YearMonth.now())
+    private val statsSelectedDate = MutableStateFlow(LocalDate.now())
     private val statsYear = MutableStateFlow(LocalDate.now().year)
     private val lastDeleted = MutableStateFlow<Expense?>(null)
 
@@ -121,20 +124,26 @@ class AccountingViewModel(
         repo.observeMonthSums(s, e)
     }
 
-    private val statsDaySumsFlow = daySumsFlow
+    private val statsMonthRange = statsMonth.map { it.startDateInt() to it.endDateInt() }
+    private val statsDaySumsFlow = statsMonthRange.flatMapLatest { (s, e) ->
+        repo.observeDaySums(s, e)
+    }
+    private val statsDayItemsFlow = statsSelectedDate.flatMapLatest { d ->
+        repo.observeByDate(d.toDateInt())
+    }
 
     private data class StatsNav(val ym: YearMonth, val sy: Int, val sel: LocalDate)
     private data class StatsMonthData(val daySums: List<com.wchaoq.md3accounting.data.local.DaySum>)
     private data class StatsYearData(val monthSums: List<com.wchaoq.md3accounting.data.local.MonthSum>)
 
-    private val statsNav = combine(yearMonth, statsYear, selectedDate) { ym, sy, sel ->
+    private val statsNav = combine(statsMonth, statsYear, statsSelectedDate) { ym, sy, sel ->
         StatsNav(ym, sy, sel)
     }
     private val statsMonthData = statsDaySumsFlow.map { sums -> StatsMonthData(sums) }
     private val statsYearData = monthSumsFlow.map { sums -> StatsYearData(sums) }
 
     val statsState: StateFlow<StatsUiState> = combine(
-        statsNav, statsMonthData, statsYearData, dayItemsFlow
+        statsNav, statsMonthData, statsYearData, statsDayItemsFlow
     ) { nav, monthData, yearData, dayItems ->
         val days = nav.ym.lengthOfMonth()
         val dayVals = MutableList(days) { 0L }
@@ -188,18 +197,28 @@ class AccountingViewModel(
         yearMonth.value = YearMonth.from(date)
     }
 
+    fun changeStatsMonth(delta: Int) {
+        val next = statsMonth.value.plusMonths(delta.toLong())
+        statsMonth.value = next
+        val day = statsSelectedDate.value.dayOfMonth.coerceAtMost(next.lengthOfMonth())
+        statsSelectedDate.value = LocalDate.of(next.year, next.month, day)
+    }
+
     fun stepYear(delta: Int) {
         statsYear.value += delta
     }
 
-    fun openMonth(monthIndex0: Int) {
-        yearMonth.value = YearMonth.of(statsYear.value, monthIndex0 + 1)
-        selectedDate.value = LocalDate.of(statsYear.value, monthIndex0 + 1, 1)
+    fun openStatsMonth(monthIndex0: Int) {
+        val next = YearMonth.of(statsYear.value, monthIndex0 + 1)
+        statsMonth.value = next
+        statsSelectedDate.value = LocalDate.of(next.year, next.month, 1)
     }
 
-    fun pickDay(dayIndex0: Int) {
-        val ym = yearMonth.value
-        selectedDate.value = LocalDate.of(ym.year, ym.month, dayIndex0 + 1)
+    fun pickStatsDay(dayIndex0: Int) {
+        val ym = statsMonth.value
+        if (dayIndex0 in 0 until ym.lengthOfMonth()) {
+            statsSelectedDate.value = LocalDate.of(ym.year, ym.month, dayIndex0 + 1)
+        }
     }
 
     fun saveExpense(existing: Expense?, title: String, amountCents: Long) {
