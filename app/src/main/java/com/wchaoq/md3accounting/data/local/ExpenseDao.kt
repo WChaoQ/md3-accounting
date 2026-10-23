@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface ExpenseDao {
 
-    @Query("SELECT * FROM expenses WHERE date = :dateInt ORDER BY id")
+    @Query("SELECT * FROM expenses WHERE date = :dateInt ORDER BY createdAt, id")
     fun observeByDate(dateInt: Int): Flow<List<ExpenseEntity>>
 
     @Query(
@@ -23,28 +23,12 @@ interface ExpenseDao {
 
     @Query(
         """
-        SELECT SUM(amount) FROM expenses
-        WHERE date >= :start AND date <= :end
-        """
-    )
-    fun observeRangeTotal(start: Int, end: Int): Flow<Long?>
-
-    @Query(
-        """
         SELECT (date / 100) AS yearMonth, SUM(amount) AS total FROM expenses
         WHERE date >= :start AND date <= :end
         GROUP BY date / 100
         """
     )
     fun observeMonthSums(start: Int, end: Int): Flow<List<MonthSum>>
-
-    @Query(
-        """
-        SELECT SUM(amount) FROM expenses
-        WHERE date >= :start AND date <= :end
-        """
-    )
-    fun observeYearTotal(start: Int, end: Int): Flow<Long?>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entity: ExpenseEntity)
