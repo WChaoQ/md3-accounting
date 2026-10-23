@@ -251,8 +251,18 @@ private fun AddExpenseForm(
     onUpdate: (Expense, String, Long) -> Unit,
     onCancelEdit: () -> Unit
 ) {
-    var title by remember { mutableStateOf("") }
-    var amount by remember { mutableStateOf("") }
+    var title by remember(editingExpense?.id) { mutableStateOf(editingExpense?.title.orEmpty()) }
+    var amount by remember(editingExpense?.id) {
+        mutableStateOf(editingExpense?.amount?.let { cents ->
+            val whole = cents / 100L
+            val fraction = (cents % 100L).toInt()
+            when {
+                fraction == 0 -> whole.toString()
+                fraction % 10 == 0 -> "$whole.\${fraction / 10}"
+                else -> "$whole.\${fraction.toString().padStart(2, '0')}"
+            }
+        }.orEmpty())
+    }
 
     LaunchedEffect(initialExpense?.id) {
         title = initialExpense?.title.orEmpty()
@@ -320,6 +330,9 @@ private fun AddExpenseForm(
                 keyboardActions = KeyboardActions(onDone = { if (valid) submit() }),
                 modifier = Modifier.weight(0.55f)
             )
+        }
+        if (editingExpense != null) {
+            TextButton(onClick = onCancelEdit) { Text("取消编辑") }
         }
         Button(
             onClick = { submit() },
