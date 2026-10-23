@@ -17,11 +17,13 @@ class ThemeStore(private val context: Context) {
     private val hueKey = intPreferencesKey("hue")
     private val darkKey = booleanPreferencesKey("dark")
     private val darkSetKey = booleanPreferencesKey("dark_set")
+    private val dynamicColorKey = booleanPreferencesKey("dynamic_color")
 
     val theme: Flow<ThemePrefs> = context.themeDataStore.data.map { prefs ->
         ThemePrefs(
             hue = prefs[hueKey] ?: 265,
-            dark = if (prefs[darkSetKey] == true) prefs[darkKey] ?: false else null
+            dark = if (prefs[darkSetKey] == true) prefs[darkKey] ?: false else null,
+            dynamicColor = prefs[dynamicColorKey] ?: false
         )
     }
 
@@ -34,5 +36,9 @@ class ThemeStore(private val context: Context) {
             it[darkKey] = dark
             it[darkSetKey] = true
         }
+    }
+
+    suspend fun setDynamicColor(enabled: Boolean) {
+        context.themeDataStore.edit { it[dynamicColorKey] = enabled }
     }
 }
