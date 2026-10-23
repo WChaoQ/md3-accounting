@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -56,8 +55,6 @@ fun AccountingApp(
     val snackHost = remember { SnackbarHostState() }
     val scheme = MaterialTheme.colorScheme
 
-    val home by vm.homeState.collectAsStateWithLifecycle()
-    val stats by vm.statsState.collectAsStateWithLifecycle()
     val theme by vm.themeState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
@@ -123,11 +120,10 @@ fun AccountingApp(
             Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .imePadding()
         ) {
             when (tab) {
                 0 -> HomeScreen(
-                    state = home,
+                    state = vm.homeState.collectAsStateWithLifecycle().value,
                     onChangeMonth = vm::changeMonth,
                     onGoToday = vm::goToday,
                     onSelectDate = vm::selectDate,
@@ -135,7 +131,7 @@ fun AccountingApp(
                     onDelete = vm::deleteExpense
                 )
                 1 -> StatsScreen(
-                    state = stats,
+                    state = vm.statsState.collectAsStateWithLifecycle().value,
                     onChangeMonth = vm::changeMonth,
                     onStepYear = vm::stepYear,
                     onOpenMonth = vm::openMonth,
