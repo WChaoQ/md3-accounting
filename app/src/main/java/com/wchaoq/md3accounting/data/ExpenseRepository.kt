@@ -29,14 +29,8 @@ class ExpenseRepository(private val context: Context) {
     fun observeDaySums(start: Int, end: Int): Flow<List<DaySum>> =
         dao.observeDaySums(start, end)
 
-    fun observeRangeTotal(start: Int, end: Int): Flow<Long> =
-        dao.observeRangeTotal(start, end).map { it ?: 0L }
-
     fun observeMonthSums(start: Int, end: Int): Flow<List<MonthSum>> =
         dao.observeMonthSums(start, end)
-
-    fun observeYearTotal(start: Int, end: Int): Flow<Long> =
-        dao.observeYearTotal(start, end).map { it ?: 0L }
 
     /** @return true if inserted successfully */
     suspend fun add(expense: Expense): Boolean = runCatching {
@@ -87,7 +81,8 @@ class ExpenseRepository(private val context: Context) {
                         id = it.id,
                         date = parseDate(it.date),
                         title = it.title,
-                        amount = it.amount
+                        amount = it.amount,
+                        createdAt = 0L
                     )
                 }
         }.getOrNull()?.let { return it }
@@ -99,7 +94,8 @@ class ExpenseRepository(private val context: Context) {
                         id = it.id,
                         date = parseDate(it.date),
                         title = it.title,
-                        amount = Math.round(it.amount * 100.0)
+                        amount = Math.round(it.amount * 100.0),
+                        createdAt = 0L
                     )
                 }
         }.getOrNull()
@@ -112,8 +108,8 @@ class ExpenseRepository(private val context: Context) {
         }.getOrElse { LocalDate.now().toDateInt() }
     }
 
-    private fun ExpenseEntity.toDomain() = Expense(id, date, title, amount)
-    private fun Expense.toEntity() = ExpenseEntity(id, date, title, amount)
+    private fun ExpenseEntity.toDomain() = Expense(id, date, title, amount, createdAt)
+    private fun Expense.toEntity() = ExpenseEntity(id, date, title, amount, createdAt)
 
     @Serializable
     private data class LegacyExpenseLong(
