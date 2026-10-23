@@ -176,7 +176,7 @@ fun StatsScreen(
         }
 
         if (selectedDayIndex < 0) {
-            Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Text(
                     "选择某一天，查看事项和金额",
                     style = MaterialTheme.typography.bodyMedium,
