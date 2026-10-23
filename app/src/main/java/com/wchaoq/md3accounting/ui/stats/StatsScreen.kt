@@ -1,6 +1,8 @@
 package com.wchaoq.md3accounting.ui.stats
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,8 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Icon
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
@@ -52,6 +52,7 @@ fun StatsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = 12.dp, vertical = 6.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
@@ -172,7 +173,6 @@ fun StatsScreen(
                     color = scheme.onSurfaceVariant
                 )
             }
-            TextButton(onClick = onExportCsv) { Text("导出 CSV") }
         }
 
         if (selectedDayIndex < 0) {
@@ -192,11 +192,8 @@ fun StatsScreen(
                 )
             }
         } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth().weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
-            ) {
-                items(state.dayItems, key = { it.id }) { expense ->
+            Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                state.dayItems.forEach { expense ->
                     Column {
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 10.dp),
@@ -204,9 +201,7 @@ fun StatsScreen(
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(end = 8.dp),
+                                modifier = Modifier.weight(1f).padding(end = 8.dp),
                                 contentAlignment = Alignment.CenterStart
                             ) {
                                 Text(
