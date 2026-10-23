@@ -22,11 +22,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -42,12 +39,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
-import android.content.Intent
-import androidx.core.content.FileProvider
 import java.io.File
-import java.time.LocalDate
-import java.time.Instant
-import java.time.ZoneId
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.wchaoq.md3accounting.R
@@ -67,15 +63,13 @@ fun AccountingApp(
 ) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var showTheme by rememberSaveable { mutableStateOf(false) }
-    var showExportOptions by rememberSaveable { mutableStateOf(false) }
     var showDataMenu by rememberSaveable { mutableStateOf(false) }
     var showAbout by rememberSaveable { mutableStateOf(false) }
-    var dateDialog by rememberSaveable { mutableIntStateOf(0) }
-    var exportStart by remember { mutableStateOf<LocalDate?>(null) }
-    val datePickerState = rememberDatePickerState(initialSelectedDateMillis = LocalDate.now().atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli())
+    var showDeleteAllDialog by rememberSaveable { mutableStateOf(false) }
     val snackHost = remember { SnackbarHostState() }
     val scheme = MaterialTheme.colorScheme
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
@@ -89,21 +83,25 @@ fun AccountingApp(
         }
     }
 
-    fun exportCsv(start: LocalDate? = null, end: LocalDate? = null) {
-        vm.exportCsv(start, end) { csv ->
-            val exportDir = File(context.cacheDir, "exports").apply { mkdirs() }
-            val suffix = if (start == null || end == null) "全部" else "${start}_${end}"
-            val csvFile = File(exportDir, "记账记录_$suffix.csv")
-            csvFile.writeText(csv, Charsets.UTF_8)
-            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", csvFile)
-            val sendIntent = Intent(Intent.ACTION_SEND).apply {
-                type = "text/csv"
-                putExtra(Intent.EXTRA_SUBJECT, csvFile.name)
-                putExtra(Intent.EXTRA_STREAM, uri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/csv")) { uri ->
+        if (uri != null) {
+            vm.exportCsv { csv ->
+                scope.launch(Dispatchers.IO) {
+                    val result = runCatching {
+                        val output = context.contentResolver.openOutputStream(uri) ?: error("无法创建文件")
+                        output.bufferedWriter(Charsets.UTF_8).use { it.write(csv) }
+                    }
+                    if (result.isFailure) withContext(Dispatchers.Main) {
+                        android.widget.Toast.makeText(context, "导出失败，请重试", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
-            context.startActivity(Intent.createChooser(sendIntent, "导出记账记录"))
         }
+    }
+
+    // Remove CSVs left by older versions; new exports go straight to the chosen document.
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) { File(context.cacheDir, "exports").deleteRecursively() }
     }
 
     val theme by vm.themeState.collectAsStateWithLifecycle()
@@ -158,7 +156,12 @@ fun AccountingApp(
                             DropdownMenuItem(
                                 text = { Text("导出 CSV") },
                                 leadingIcon = { Icon(painterResource(R.drawable.ic_export), contentDescription = null) },
-                                onClick = { showDataMenu = false; showExportOptions = true }
+                                onClick = { showDataMenu = false; exportLauncher.launch("支出记录.csv") }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("删除所有数据", color = scheme.error) },
+                                leadingIcon = { Icon(painterResource(R.drawable.ic_delete), contentDescription = null, tint = scheme.error) },
+                                onClick = { showDataMenu = false; showDeleteAllDialog = true }
                             )
                         }
                     }
@@ -216,13 +219,15 @@ fun AccountingApp(
                     tint = scheme.primary
                 )
             },
-            title = { Text("支出") },
+            title = { Text("支出记录") },
             text = {
                 Column(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
                 ) {
-                    Text("GPT · Grok · Gemini · Claude", color = scheme.onSurface)
+                    Text("由 GPT、Grok、Gemini、Claude 制作", color = scheme.onSurface)
+                    Text("制作日期：2026-10-24", color = scheme.onSurfaceVariant)
+                    Text("版本：1.0.2（3）", color = scheme.onSurfaceVariant)
                     Text(
                         "wchaoq",
                         modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
@@ -238,53 +243,21 @@ fun AccountingApp(
         )
     }
 
-    if (showExportOptions) {
+    if (showDeleteAllDialog) {
         AlertDialog(
-            onDismissRequest = { showExportOptions = false },
-            title = { Text("导出 CSV") },
-            text = { Text("选择导出全部记录，或指定日期范围。") },
+            onDismissRequest = { showDeleteAllDialog = false },
+            icon = { Icon(painterResource(R.drawable.ic_delete), contentDescription = null, tint = scheme.error) },
+            title = { Text("删除所有数据？") },
+            text = { Text("此操作会永久删除全部支出记录，且无法撤销。") },
             confirmButton = {
                 TextButton(onClick = {
-                    showExportOptions = false
-                    exportStart = null
-                    exportCsv()
-                }) { Text("全部导出") }
+                    showDeleteAllDialog = false
+                    vm.deleteAllExpenses()
+                }) { Text("删除全部", color = scheme.error) }
             },
-            dismissButton = {
-                TextButton(onClick = {
-                    showExportOptions = false
-                    datePickerState.selectedDateMillis = LocalDate.now().atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
-                    dateDialog = 1
-                }) { Text("选择日期范围") }
-            },
+            dismissButton = { TextButton(onClick = { showDeleteAllDialog = false }) { Text("取消") } },
             shape = RoundedCornerShape(28.dp)
         )
-    }
-
-    if (dateDialog != 0) {
-        DatePickerDialog(
-            onDismissRequest = { dateDialog = 0 },
-            confirmButton = {
-                TextButton(onClick = {
-                    val picked = datePickerState.selectedDateMillis?.let {
-                        Instant.ofEpochMilli(it).atZone(ZoneId.of("UTC")).toLocalDate()
-                    }
-                    if (picked != null && dateDialog == 1) {
-                        exportStart = picked
-                        datePickerState.selectedDateMillis = picked.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
-                        dateDialog = 2
-                    } else if (picked != null) {
-                        val startDate = exportStart
-                        dateDialog = 0
-                        if (startDate != null && !picked.isBefore(startDate)) exportCsv(startDate, picked)
-                        else android.widget.Toast.makeText(context, "结束日期不能早于开始日期", android.widget.Toast.LENGTH_SHORT).show()
-                    }
-                }) { Text(if (dateDialog == 1) "下一步" else "导出") }
-            },
-            dismissButton = { TextButton(onClick = { dateDialog = 0 }) { Text("取消") } }
-        ) {
-            DatePicker(state = datePickerState, title = { Text(if (dateDialog == 1) "选择开始日期" else "选择结束日期", modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 4.dp), maxLines = 1, softWrap = false) })
-        }
     }
 
     if (showTheme) {

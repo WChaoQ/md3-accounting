@@ -254,18 +254,9 @@ class AccountingViewModel(
         }
     }
 
-    fun exportCsv(startDate: LocalDate? = null, endDate: LocalDate? = null, onReady: (String) -> Unit) {
+    fun exportCsv(onReady: (String) -> Unit) {
         viewModelScope.launch {
-            val expenses = withContext(Dispatchers.IO) {
-                repo.allExpenses().filter { expense ->
-                    val date = runCatching {
-                        LocalDate.of(expense.date / 10_000, (expense.date / 100) % 100, expense.date % 100)
-                    }.getOrNull()
-                    date != null &&
-                        (startDate == null || !date.isBefore(startDate)) &&
-                        (endDate == null || !date.isAfter(endDate))
-                }
-            }
+            val expenses = withContext(Dispatchers.IO) { repo.allExpenses() }
             val csv = withContext(Dispatchers.Default) {
                 buildString {
                     appendLine("date,title,amount")
@@ -342,8 +333,13 @@ class AccountingViewModel(
     }
 
     fun deleteExpense(id: String) {
-        viewModelScope.launch {
-            repo.delete(id)
+        viewModelScope.launch { repo.delete(id) }
+    }
+
+    fun deleteAllExpenses() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val deleted = repo.deleteAll()
+            snackChannel.send(SnackEvent(if (deleted > 0) "已删除全部 $deleted 条记录" else "没有可删除的记录"))
         }
     }
 

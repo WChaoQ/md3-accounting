@@ -49,6 +49,9 @@ interface ExpenseDao {
     @Query("SELECT * FROM expenses ORDER BY date DESC, createdAt DESC, id DESC")
     suspend fun getAll(): List<ExpenseEntity>
 
+    @Query("DELETE FROM expenses")
+    suspend fun deleteAll(): Int
+
     @Query("SELECT COUNT(*) FROM expenses")
     suspend fun count(): Int
 }

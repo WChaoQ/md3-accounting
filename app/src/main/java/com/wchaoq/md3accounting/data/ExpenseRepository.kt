@@ -40,6 +40,8 @@ class ExpenseRepository(private val context: Context) {
 
     suspend fun allExpenses(): List<Expense> = dao.getAll().map { it.toDomain() }
 
+    suspend fun deleteAll(): Int = dao.deleteAll()
+
     /** Update an existing record; returns false when the record does not exist or the update fails. */
     suspend fun update(expense: Expense): Boolean = runCatching {
         dao.update(expense.toEntity()) > 0
