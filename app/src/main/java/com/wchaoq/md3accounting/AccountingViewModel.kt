@@ -225,7 +225,7 @@ class AccountingViewModel(
             val csv = buildString {
                 appendLine("date,title,amount")
                 repo.allExpenses().forEach { expense ->
-                    val date = "${expense.date / 10_000}-${(expense.date / 100) % 100}-${expense.date % 100}"
+                    val date = "${expense.date / 10_000}-${((expense.date / 100) % 100).toString().padStart(2, '0')}-${(expense.date % 100).toString().padStart(2, '0')}"
                     val whole = expense.amount / 100L
                     val fraction = (expense.amount % 100L).toString().padStart(2, '0')
                     append(date).append(',')
