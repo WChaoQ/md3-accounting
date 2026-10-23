@@ -1,6 +1,7 @@
 package com.wchaoq.md3accounting.ui
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,6 +23,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -64,6 +67,8 @@ fun AccountingApp(
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var showTheme by rememberSaveable { mutableStateOf(false) }
     var showExportOptions by rememberSaveable { mutableStateOf(false) }
+    var showDataMenu by rememberSaveable { mutableStateOf(false) }
+    var showAbout by rememberSaveable { mutableStateOf(false) }
     var dateDialog by rememberSaveable { mutableIntStateOf(0) }
     var exportStart by remember { mutableStateOf<LocalDate?>(null) }
     val datePickerState = rememberDatePickerState(initialSelectedDateMillis = LocalDate.now().atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli())
@@ -113,15 +118,18 @@ fun AccountingApp(
         topBar = {
             TopAppBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.clickable { showAbout = true },
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Icon(
-                            painterResource(R.drawable.ic_wallet),
+                            painterResource(R.drawable.ic_launcher_foreground),
                             contentDescription = null,
                             tint = scheme.primary,
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(Modifier.size(8.dp))
-                        Text(if (tab == 0) "记账" else "统计")
+                        Text(if (tab == 0) "支出" else "统计")
                     }
                 },
                 actions = {
@@ -134,8 +142,26 @@ fun AccountingApp(
                             contentDescription = if (dark) "切换浅色模式" else "切换深色模式"
                         )
                     }
-                    TextButton(onClick = { importLauncher.launch("text/*") }) { Text("导入") }
-                    TextButton(onClick = { showExportOptions = true }) { Text("导出") }
+                    Box {
+                        IconButton(onClick = { showDataMenu = true }) {
+                            Icon(painterResource(R.drawable.ic_data), contentDescription = "数据管理")
+                        }
+                        DropdownMenu(
+                            expanded = showDataMenu,
+                            onDismissRequest = { showDataMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("导入 CSV") },
+                                leadingIcon = { Icon(painterResource(R.drawable.ic_import), contentDescription = null) },
+                                onClick = { showDataMenu = false; importLauncher.launch("text/*") }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("导出 CSV") },
+                                leadingIcon = { Icon(painterResource(R.drawable.ic_export), contentDescription = null) },
+                                onClick = { showDataMenu = false; showExportOptions = true }
+                            )
+                        }
+                    }
                 }
             )
         },
@@ -145,7 +171,7 @@ fun AccountingApp(
                     selected = tab == 0,
                     onClick = { tab = 0 },
                     icon = { Icon(painterResource(R.drawable.ic_calendar), contentDescription = null) },
-                    label = { Text("记账") }
+                    label = { Text("支出") }
                 )
                 NavigationBarItem(
                     selected = tab == 1,
@@ -178,6 +204,32 @@ fun AccountingApp(
                 )
             }
         }
+    }
+
+    if (showAbout) {
+        AlertDialog(
+            onDismissRequest = { showAbout = false },
+            icon = {
+                Icon(
+                    painterResource(R.drawable.ic_launcher_foreground),
+                    contentDescription = null,
+                    tint = scheme.onSurface
+                )
+            },
+            title = { Text("支出") },
+            text = {
+                Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                    Text("简洁、轻量的个人支出记录与统计工具。", color = scheme.onSurface)
+                    Text("开发者：wchaoq", color = scheme.onSurfaceVariant)
+                    Text("界面设计：Material 3", color = scheme.onSurfaceVariant)
+                    Text("版本 1.0.1", color = scheme.onSurfaceVariant)
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAbout = false }) { Text("知道了") }
+            },
+            shape = RoundedCornerShape(28.dp)
+        )
     }
 
     if (showExportOptions) {
