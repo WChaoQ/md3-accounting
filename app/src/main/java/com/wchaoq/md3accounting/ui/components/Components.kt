@@ -284,7 +284,7 @@ fun ThemeSwatches(
                         if (hue == currentHue) {
                             Icon(
                                 painterResource(R.drawable.ic_check),
-                                contentDescription = "$name主题已选中",
+                                contentDescription = "${name}主题已选中",
                                 tint = Color.White
                             )
                         }
