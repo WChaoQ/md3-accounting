@@ -32,7 +32,6 @@ import java.util.UUID
 data class SnackEvent(
     val message: String,
     val actionLabel: String? = null,
-    val isUndoDelete: Boolean = false
 )
 
 @Immutable
@@ -75,7 +74,6 @@ class AccountingViewModel(
     private val statsMonth = MutableStateFlow(YearMonth.now())
     private val statsSelectedDate = MutableStateFlow(LocalDate.now())
     private val statsYear = MutableStateFlow(LocalDate.now().year)
-    private val lastDeleted = MutableStateFlow<Expense?>(null)
 
     private val snackChannel = Channel<SnackEvent>(Channel.BUFFERED)
     val snackEvents = snackChannel.receiveAsFlow()
@@ -263,24 +261,13 @@ class AccountingViewModel(
     }
 
     private fun csvCell(value: String): String {
-        if (value.none { it == ',' || it == '"' || it.code == 10 || it.code == 13 }) return value
+        if (value.none { it == ',' || it == '"' || it == '\n' || it == '\r' }) return value
         return "\"" + value.replace("\"", "\"\"") + "\""
     }
 
     fun deleteExpense(id: String) {
         viewModelScope.launch {
-            val removed = repo.delete(id) ?: return@launch
-            lastDeleted.value = removed
-        }
-    }
-
-    fun undoDelete() {
-        val e = lastDeleted.value ?: return
-        viewModelScope.launch {
-            if (repo.restore(e)) {
-                lastDeleted.value = null
-                snackChannel.send(SnackEvent("已恢复"))
-            }
+            repo.delete(id)
         }
     }
 
