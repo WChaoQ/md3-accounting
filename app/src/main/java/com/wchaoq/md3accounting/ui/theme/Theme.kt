@@ -1,16 +1,26 @@
 package com.wchaoq.md3accounting.ui.theme
 
+import android.os.Build
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.dynamicDarkColorScheme
+import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun MD3AccountingTheme(
     hue: Int = 265,
     darkTheme: Boolean = false,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val scheme = remember(hue, darkTheme) { buildColorScheme(hue, darkTheme) }
+    val context = LocalContext.current
+    val scheme = if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+    } else {
+        remember(hue, darkTheme) { buildColorScheme(hue, darkTheme) }
+    }
     MaterialTheme(
         colorScheme = scheme,
         typography = Typography,
