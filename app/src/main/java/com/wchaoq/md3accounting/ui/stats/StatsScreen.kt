@@ -31,9 +31,6 @@ fun StatsScreen(
     state: StatsUiState,
     onChangeMonth: (Int) -> Unit,
     onStepYear: (Int) -> Unit,
-    onOpenMonth: (Int) -> Unit,
-    onPickDay: (Int) -> Unit,
-    onNavigateToHome: () -> Unit,
     onExportCsv: () -> Unit
 ) {
     val ym = state.yearMonth
@@ -91,10 +88,7 @@ fun StatsScreen(
                     values = state.dayVals,
                     labels = { i -> if (i % 5 == 0 || i == 0) "${i + 1}" else "" },
                     highlightIndex = state.selectedDayIndex,
-                    onBarClick = { day ->
-                        onPickDay(day)
-                        onNavigateToHome()
-                    }
+                    onBarClick = { }
                 )
             }
         }
@@ -143,10 +137,7 @@ fun StatsScreen(
                     values = state.monthVals,
                     labels = { i -> "${i + 1}月" },
                     highlightIndex = state.highlightMonthIndex,
-                    onBarClick = { month ->
-                        onOpenMonth(month)
-                        onNavigateToHome()
-                    }
+                    onBarClick = { }
                 )
             }
         }
