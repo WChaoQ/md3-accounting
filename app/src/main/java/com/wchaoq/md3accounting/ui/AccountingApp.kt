@@ -139,6 +139,7 @@ fun AccountingApp(
                     onStepYear = vm::stepYear,
                     onOpenMonth = vm::openMonth,
                     onPickDay = vm::pickDay,
+                    onNavigateToHome = { tab = 0 },
                     onExportCsv = {
                         vm.exportCsv { csv ->
                             val sendIntent = Intent(Intent.ACTION_SEND).apply {
