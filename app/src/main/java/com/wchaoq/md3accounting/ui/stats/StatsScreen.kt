@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
@@ -45,6 +46,7 @@ fun StatsScreen(
     val ym = state.yearMonth
     val scheme = MaterialTheme.colorScheme
     var selectedDayIndex by remember(ym) { mutableIntStateOf(-1) }
+    LaunchedEffect(state.statsYear) { selectedDayIndex = -1 }
 
     Column(
         modifier = Modifier
