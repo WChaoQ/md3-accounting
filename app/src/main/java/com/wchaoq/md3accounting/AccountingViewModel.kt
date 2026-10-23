@@ -213,12 +213,11 @@ class AccountingViewModel(
         )
         viewModelScope.launch {
             val ok = if (existing == null) repo.add(expense) else repo.update(expense)
-            val message = when {
-                !ok -> if (existing == null) "添加失败，请重试" else "修改失败，请重试"
-                existing == null -> "已添加"
-                else -> "已保存修改"
+            if (!ok) {
+                snackChannel.send(
+                    SnackEvent(if (existing == null) "添加失败，请重试" else "修改失败，请重试")
+                )
             }
-            snackChannel.send(SnackEvent(message))
         }
     }
 
@@ -251,7 +250,6 @@ class AccountingViewModel(
         viewModelScope.launch {
             val removed = repo.delete(id) ?: return@launch
             lastDeleted.value = removed
-            snackChannel.send(SnackEvent("已删除记录", actionLabel = "撤销", isUndoDelete = true))
         }
     }
 
