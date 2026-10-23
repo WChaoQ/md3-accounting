@@ -73,79 +73,103 @@ fun HomeScreen(
     var showEntryDialog by remember(state.selectedDate) { mutableStateOf(false) }
 
     Box(Modifier.fillMaxSize()) {
-    LazyColumn(
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        item(key = "month-summary") {
-            SummaryCard("${ym.monthValue}月总支出", state.monthTotal)
-        }
-        item(key = "calendar") {
-            MdCard {
-                Column(Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "${ym.year}年${ym.monthValue}月",
-                            style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier.weight(1f)
-                        )
-                        TextButton(onClick = onGoToday) { Text("今天") }
-                        IconButton(onClick = { onChangeMonth(-1) }) {
-                            Icon(painterResource(R.drawable.ic_chevron_left), "上个月")
-                        }
-                        IconButton(onClick = { onChangeMonth(1) }) {
-                            Icon(painterResource(R.drawable.ic_chevron_right), "下个月")
-                        }
-                    }
-                    Spacer(Modifier.height(8.dp))
-                    Row(Modifier.fillMaxWidth()) {
-                        listOf("日", "一", "二", "三", "四", "五", "六").forEach {
-                            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
-                                Text(it, style = MaterialTheme.typography.labelMedium, color = scheme.onSurfaceVariant)
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            item(key = "month-summary") {
+                SummaryCard("${ym.monthValue}月总支出", state.monthTotal)
+            }
+            item(key = "calendar") {
+                MdCard {
+                    Column(Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "${ym.year}年${ym.monthValue}月",
+                                style = MaterialTheme.typography.titleLarge,
+                                modifier = Modifier.weight(1f)
+                            )
+                            TextButton(onClick = onGoToday) { Text("今天") }
+                            IconButton(onClick = { onChangeMonth(-1) }) {
+                                Icon(painterResource(R.drawable.ic_chevron_left), "上个月")
+                            }
+                            IconButton(onClick = { onChangeMonth(1) }) {
+                                Icon(painterResource(R.drawable.ic_chevron_right), "下个月")
                             }
                         }
-                    }
-                    Spacer(Modifier.height(4.dp))
-                    CalendarGrid(
-                        yearMonth = ym,
-                        selected = state.selectedDate,
-                        today = LocalDate.now(),
-                        dayTotals = state.dayTotals,
-                        onSelect = { date ->
-                            editingExpense = null
-                            onSelectDate(date)
+                        Spacer(Modifier.height(8.dp))
+                        Row(Modifier.fillMaxWidth()) {
+                            listOf("日", "一", "二", "三", "四", "五", "六").forEach {
+                                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+                                    Text(it, style = MaterialTheme.typography.labelMedium, color = scheme.onSurfaceVariant)
+                                }
+                            }
                         }
+                        Spacer(Modifier.height(4.dp))
+                        CalendarGrid(
+                            yearMonth = ym,
+                            selected = state.selectedDate,
+                            today = LocalDate.now(),
+                            dayTotals = state.dayTotals,
+                            onSelect = { date ->
+                                editingExpense = null
+                                onSelectDate(date)
+                            }
+                        )
+                    }
+                }
+            }
+            item(key = "day-header") {
+                MdCard {
+                    Row(
+                        Modifier.fillMaxWidth().padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                "${state.selectedDate.monthValue}月${state.selectedDate.dayOfMonth}日",
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                            Text("当日支出", style = MaterialTheme.typography.labelMedium, color = scheme.onSurfaceVariant)
+                        }
+                        Text(
+                            money(state.dayTotal),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = scheme.primary,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
+            if (state.dayItems.isEmpty()) {
+                item(key = "empty-day") { EmptyDay() }
+            } else {
+                items(state.dayItems, key = { it.id }) { expense ->
+                    ExpenseItem(
+                        expense = expense,
+                        onEdit = {
+                            editingExpense = expense
+                            showEntryDialog = true
+                        },
+                        onDelete = { onDelete(expense.id) }
                     )
                 }
             }
+            item(key = "bottom-space") { Spacer(Modifier.height(88.dp)) }
         }
-        if (state.dayItems.isEmpty()) {
-            item(key = "empty-day") { EmptyDay() }
-        } else {
-            items(state.dayItems, key = { it.id }) { expense ->
-                ExpenseItem(
-                    expense = expense,
-                    onEdit = { editingExpense = expense },
-                    onDelete = { onDelete(expense.id) }
-                )
-            }
-        }
-        item(key = "bottom-space") { Spacer(Modifier.height(8.dp)) }
-    }
-        item(key = "bottom-space") { Spacer(Modifier.height(88.dp)) }
-    }
 
-    FloatingActionButton(
-        onClick = {
-            editingExpense = null
-            showEntryDialog = true
-        },
-        modifier = Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 16.dp)
-    ) {
-        Icon(painterResource(R.drawable.ic_check), contentDescription = null)
-        Text("记一笔", modifier = Modifier.padding(start = 8.dp, end = 12.dp))
-    }
+        FloatingActionButton(
+            onClick = {
+                editingExpense = null
+                showEntryDialog = true
+            },
+            modifier = Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 16.dp)
+        ) {
+            Text("+", style = MaterialTheme.typography.headlineSmall)
+            Text("记一笔", modifier = Modifier.padding(start = 8.dp, end = 12.dp))
+        }
     }
 
     if (showEntryDialog) {
