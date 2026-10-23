@@ -1,5 +1,7 @@
 package com.wchaoq.md3accounting.ui.components
 
+import android.os.Build
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -19,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -229,32 +232,63 @@ fun BarChart(
 fun ThemeSwatches(
     currentHue: Int,
     dark: Boolean,
+    dynamicColor: Boolean,
+    onToggleDynamic: (Boolean) -> Unit,
     onSelect: (Int) -> Unit
 ) {
-    Row(
+    val dynamicAvailable = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+    Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        ThemeHues.forEach { (name, hue) ->
-            val bg = hsl(
-                hue.toFloat(),
-                0.5f,
-                if (dark) 0.72f else 0.42f
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text("跟随壁纸动态取色", style = MaterialTheme.typography.titleSmall)
+                Text(
+                    if (dynamicAvailable) "使用系统壁纸生成的颜色"
+                    else "需要 Android 12 或更高版本",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Switch(
+                checked = dynamicColor,
+                onCheckedChange = onToggleDynamic,
+                enabled = dynamicAvailable
             )
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(bg)
-                    .clickable { onSelect(hue) },
-                contentAlignment = Alignment.Center
+        }
+        if (!dynamicColor) {
+            Text("固定颜色主题", style = MaterialTheme.typography.titleSmall)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                if (hue == currentHue) {
-                    Icon(
-                        painterResource(R.drawable.ic_check),
-                        contentDescription = name,
-                        tint = if (dark) Color(0xFF222222) else Color.White
+                ThemeHues.forEach { (name, hue) ->
+                    val bg = hsl(
+                        hue.toFloat(),
+                        0.5f,
+                        if (dark) 0.72f else 0.42f
                     )
+                    Box(
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                            .background(bg)
+                            .clickable { onSelect(hue) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (hue == currentHue) {
+                            Icon(
+                                painterResource(R.drawable.ic_check),
+                                contentDescription = "$name主题已选中",
+                                tint = Color.White
+                            )
+                        }
+                    }
                 }
             }
         }
