@@ -8,6 +8,11 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Keep only the newest build for each branch to avoid wasting runner time.
+concurrency:
+  group: android-ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
