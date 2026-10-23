@@ -124,9 +124,8 @@ fun AccountingApp(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
-                            painterResource(R.drawable.ic_launcher_foreground),
+                            painterResource(if (tab == 0) R.drawable.ic_calendar else R.drawable.ic_stats),
                             contentDescription = null,
-                            tint = androidx.compose.ui.graphics.Color.Unspecified,
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(Modifier.size(8.dp))
@@ -212,16 +211,16 @@ fun AccountingApp(
             onDismissRequest = { showAbout = false },
             icon = {
                 Icon(
-                    painterResource(R.drawable.ic_launcher_foreground),
+                    painterResource(R.drawable.ic_ai),
                     contentDescription = null,
-                    tint = scheme.onSurface
+                    tint = scheme.primary
                 )
             },
             title = { Text("支出") },
             text = {
                 Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
-                    Text("简洁、轻量的个人支出记录与统计工具。", color = scheme.onSurface)
-                    Text("开发者：wchaoq", color = scheme.onSurfaceVariant)
+                    Text("GPT · Grok · Gemini · Claude", color = scheme.onSurface)
+                    Text("wchaoq", modifier = Modifier.fillMaxWidth().padding(top = 12.dp), color = scheme.onSurfaceVariant.copy(alpha = 0.65f), textAlign = TextAlign.Center)
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             painterResource(R.drawable.ic_ai),
@@ -230,10 +229,8 @@ fun AccountingApp(
                             modifier = Modifier.size(20.dp)
                         )
                         Spacer(Modifier.size(8.dp))
-                        Text("AI 协助：ChatGPT", color = scheme.onSurfaceVariant)
+                        Text("GPT · Grok · Gemini · Claude", color = scheme.onSurfaceVariant)
                     }
-                    Text("界面设计：Material 3", color = scheme.onSurfaceVariant)
-                    Text("版本 1.0.1", color = scheme.onSurfaceVariant)
                 }
             },
             confirmButton = {
@@ -288,7 +285,7 @@ fun AccountingApp(
             },
             dismissButton = { TextButton(onClick = { dateDialog = 0 }) { Text("取消") } }
         ) {
-            DatePicker(state = datePickerState, title = { Text(if (dateDialog == 1) "选择开始日期" else "选择结束日期") })
+            DatePicker(state = datePickerState, title = { Text(if (dateDialog == 1) "选择开始日期" else "选择结束日期", modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 8.dp, bottom = 4.dp), maxLines = 1, softWrap = false) })
         }
     }
 
