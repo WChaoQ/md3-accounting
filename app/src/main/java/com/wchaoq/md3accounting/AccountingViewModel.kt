@@ -220,6 +220,28 @@ class AccountingViewModel(
         }
     }
 
+    fun exportCsv(onReady: (String) -> Unit) {
+        viewModelScope.launch {
+            val csv = buildString {
+                appendLine("date,title,amount")
+                repo.allExpenses().forEach { expense ->
+                    val date = "${expense.date / 10_000}-${(expense.date / 100) % 100}-${expense.date % 100}"
+                    val whole = expense.amount / 100L
+                    val fraction = (expense.amount % 100L).toString().padStart(2, '0')
+                    append(date).append(',')
+                    append(csvCell(expense.title)).append(',')
+                    append(whole).append('.').append(fraction).appendLine()
+                }
+            }
+            onReady(csv)
+        }
+    }
+
+    private fun csvCell(value: String): String {
+        if (value.none { it == ',' || it == '"' || it == '\\n' || it == '\\r' }) return value
+        return "\"" + value.replace("\"", "\"\"") + "\""
+    }
+
     fun deleteExpense(id: String) {
         viewModelScope.launch {
             val removed = repo.delete(id) ?: return@launch
