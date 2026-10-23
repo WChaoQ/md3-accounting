@@ -152,9 +152,15 @@ fun EmptyDay() {
         )
         Spacer(Modifier.height(4.dp))
         Text(
-            "该日暂无支出记录",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.outline
+            "暂无支出记录",
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            "点击右下角 + 添加一笔支出",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }
