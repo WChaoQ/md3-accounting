@@ -105,7 +105,7 @@ fun HomeScreen(
                                     datePickerState.selectedDateMillis = state.selectedDate.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
                                     showDatePicker = true
                                 }) {
-                                    Icon(painterResource(R.drawable.ic_chevron_down), "选择日期")
+                                    Icon(painterResource(R.drawable.ic_chevron_right), "选择日期")
                                 }
                             }
                             Text("当日支出", style = MaterialTheme.typography.labelMedium, color = scheme.onSurfaceVariant)
