@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
@@ -258,6 +259,15 @@ private fun CalendarGrid(
                                     )
                                     else Modifier
                                 )
+                                .drawBehind {
+                                    if (isToday && !isSel) {
+                                        drawCircle(
+                                            color = scheme.primary,
+                                            radius = 2.dp.toPx(),
+                                            center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height - 5.dp.toPx())
+                                        )
+                                    }
+                                }
                                 .clickable { onSelect(date) }
                                 .padding(horizontal = 2.dp),
                             contentAlignment = Alignment.Center
