@@ -23,6 +23,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.YearMonth
 import java.util.UUID
@@ -222,15 +224,18 @@ class AccountingViewModel(
 
     fun exportCsv(onReady: (String) -> Unit) {
         viewModelScope.launch {
-            val csv = buildString {
-                appendLine("date,title,amount")
-                repo.allExpenses().forEach { expense ->
-                    val date = "${expense.date / 10_000}-${((expense.date / 100) % 100).toString().padStart(2, '0')}-${(expense.date % 100).toString().padStart(2, '0')}"
-                    val whole = expense.amount / 100L
-                    val fraction = (expense.amount % 100L).toString().padStart(2, '0')
-                    append(date).append(',')
-                    append(csvCell(expense.title)).append(',')
-                    append(whole).append('.').append(fraction).appendLine()
+            val expenses = repo.allExpenses()
+            val csv = withContext(Dispatchers.Default) {
+                buildString {
+                    appendLine("date,title,amount")
+                    expenses.forEach { expense ->
+                        val date = "${expense.date / 10_000}-${((expense.date / 100) % 100).toString().padStart(2, '0')}-${(expense.date % 100).toString().padStart(2, '0')}"
+                        val whole = expense.amount / 100L
+                        val fraction = (expense.amount % 100L).toString().padStart(2, '0')
+                        append(date).append(',')
+                        append(csvCell(expense.title)).append(',')
+                        append(whole).append('.').append(fraction).appendLine()
+                    }
                 }
             }
             onReady(csv)
