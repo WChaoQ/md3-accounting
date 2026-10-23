@@ -157,6 +157,7 @@ class AccountingViewModel(
             selectedDayIndex = selIdx,
             monthTotal = monthData.daySums.sumOf { it.total },
             dayVals = dayVals.toList(),
+            dayItems = dayItems,
             yearTotal = yearData.monthSums.sumOf { it.total },
             monthVals = monthVals.toList(),
             highlightMonthIndex = hlMonth
