@@ -12,5 +12,7 @@ data class Expense(
 data class ThemePrefs(
     val hue: Int = 265,
     /** null = follow system until user toggles */
-    val dark: Boolean? = null
+    val dark: Boolean? = null,
+    /** Use Android wallpaper-derived Material You colors when available. */
+    val dynamicColor: Boolean = false
 )
