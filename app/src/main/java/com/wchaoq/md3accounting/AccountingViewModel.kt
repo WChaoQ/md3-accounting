@@ -200,27 +200,25 @@ class AccountingViewModel(
         selectedDate.value = LocalDate.of(ym.year, ym.month, dayIndex0 + 1)
     }
 
-    fun addExpense(title: String, amountCents: Long) {
-        if (title.isBlank() || amountCents <= 0) return
-        val e = Expense(
+    fun saveExpense(existing: Expense?, title: String, amountCents: Long) {
+        if (title.isBlank() || amountCents <= 0L) return
+        val expense = existing?.copy(
+            title = title.trim(),
+            amount = amountCents
+        ) ?: Expense(
             id = UUID.randomUUID().toString(),
             date = selectedDate.value.toDateInt(),
             title = title.trim(),
             amount = amountCents
         )
         viewModelScope.launch {
-            val ok = repo.add(e)
-            if (ok) snackChannel.send(SnackEvent("已添加"))
-            else snackChannel.send(SnackEvent("添加失败，请重试"))
-        }
-    }
-
-    fun updateExpense(expense: Expense, title: String, amountCents: Long) {
-        if (title.isBlank() || amountCents <= 0) return
-        val updated = expense.copy(title = title.trim(), amount = amountCents)
-        viewModelScope.launch {
-            if (repo.update(updated)) snackChannel.send(SnackEvent("已保存修改"))
-            else snackChannel.send(SnackEvent("保存失败，请重试"))
+            val ok = if (existing == null) repo.add(expense) else repo.update(expense)
+            val message = when {
+                !ok -> if (existing == null) "添加失败，请重试" else "修改失败，请重试"
+                existing == null -> "已添加"
+                else -> "已保存修改"
+            }
+            snackChannel.send(SnackEvent(message))
         }
     }
 
