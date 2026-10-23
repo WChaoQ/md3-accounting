@@ -175,7 +175,7 @@ fun BarChart(
     val labelStyle = MaterialTheme.typography.labelSmall.merge(
         TextStyle(color = labelColor, fontSize = 12.sp)
     )
-    val layouts = remember(n, labels, labelStyle) {
+    val layouts = remember(n, labelStyle) {
         Array(n) { i ->
             val t = labels(i)
             if (t.isEmpty()) null else textMeasurer.measure(t, style = labelStyle)
