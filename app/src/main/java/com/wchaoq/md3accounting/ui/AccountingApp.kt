@@ -18,7 +18,6 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -35,6 +34,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.platform.LocalContext
 import android.content.Intent
+import androidx.core.content.FileProvider
+import java.io.File
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.wchaoq.md3accounting.R
@@ -63,13 +64,7 @@ fun AccountingApp(
     LaunchedEffect(Unit) {
         vm.snackEvents.collectLatest { event ->
             snackHost.currentSnackbarData?.dismiss()
-            val result = snackHost.showSnackbar(
-                message = event.message,
-                actionLabel = event.actionLabel
-            )
-            if (result == SnackbarResult.ActionPerformed && event.isUndoDelete) {
-                vm.undoDelete()
-            }
+            snackHost.showSnackbar(message = event.message)
         }
     }
 
@@ -141,10 +136,20 @@ fun AccountingApp(
                     onPickDay = vm::pickStatsDay,
                     onExportCsv = {
                         vm.exportCsv { csv ->
+                            val exportDir = File(context.cacheDir, "exports").apply { mkdirs() }
+                            val date = java.time.LocalDate.now().toString()
+                            val csvFile = File(exportDir, "记账记录_$date.csv")
+                            csvFile.writeText(csv, Charsets.UTF_8)
+                            val uri = FileProvider.getUriForFile(
+                                context,
+                                "${context.packageName}.fileprovider",
+                                csvFile
+                            )
                             val sendIntent = Intent(Intent.ACTION_SEND).apply {
                                 type = "text/csv"
-                                putExtra(Intent.EXTRA_SUBJECT, "记账记录.csv")
-                                putExtra(Intent.EXTRA_TEXT, csv)
+                                putExtra(Intent.EXTRA_SUBJECT, "记账记录_$date.csv")
+                                putExtra(Intent.EXTRA_STREAM, uri)
+                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                             }
                             context.startActivity(Intent.createChooser(sendIntent, "导出记账记录"))
                         }
