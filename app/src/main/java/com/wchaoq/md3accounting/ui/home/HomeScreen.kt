@@ -20,8 +20,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -29,7 +28,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -160,16 +158,15 @@ fun HomeScreen(
             item(key = "bottom-space") { Spacer(Modifier.height(88.dp)) }
         }
 
-        FloatingActionButton(
+        ExtendedFloatingActionButton(
             onClick = {
                 editingExpense = null
                 showEntryDialog = true
             },
+            icon = { Text("+", style = MaterialTheme.typography.headlineSmall) },
+            text = { Text("记一笔") },
             modifier = Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 16.dp)
-        ) {
-            Text("+", style = MaterialTheme.typography.headlineSmall)
-            Text("记一笔", modifier = Modifier.padding(start = 8.dp, end = 12.dp))
-        }
+        )
     }
 
     if (showEntryDialog) {
