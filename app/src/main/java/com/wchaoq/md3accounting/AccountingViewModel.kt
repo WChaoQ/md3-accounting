@@ -52,6 +52,7 @@ data class StatsUiState(
     val selectedDayIndex: Int = -1,
     val monthTotal: Long = 0L,
     val dayVals: List<Long> = emptyList(),
+    val dayItems: List<Expense> = emptyList(),
     val yearTotal: Long = 0L,
     val monthVals: List<Long> = List(12) { 0L },
     val highlightMonthIndex: Int = -1
