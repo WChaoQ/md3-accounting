@@ -82,7 +82,7 @@ class AccountingViewModel(
 
     private val daySumsFlow = monthRange.flatMapLatest { (s, e) ->
         repo.observeDaySums(s, e)
-    }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     private val dayItemsFlow = selectedDate.flatMapLatest { d ->
         repo.observeByDate(d.toDateInt())
@@ -118,9 +118,7 @@ class AccountingViewModel(
         repo.observeMonthSums(s, e)
     }
 
-    private val statsDaySumsFlow = monthRange.flatMapLatest { (s, e) ->
-        repo.observeDaySums(s, e)
-    }
+    private val statsDaySumsFlow = daySumsFlow
 
     private data class StatsNav(val ym: YearMonth, val sy: Int, val sel: LocalDate)
     private data class StatsMonthData(val daySums: List<com.wchaoq.md3accounting.data.local.DaySum>)
