@@ -249,14 +249,20 @@ private fun AddExpenseForm(
     onSave: (Expense?, String, Long) -> Unit,
     onCancelEdit: () -> Unit
 ) {
-    var title by remember(editingExpense?.id) {
-        mutableStateOf(editingExpense?.title.orEmpty())
-    }
+    var title by remember(editingExpense?.id) { mutableStateOf(editingExpense?.title.orEmpty()) }
     var amount by remember(editingExpense?.id) {
-        mutableStateOf(editingExpense?.amount?.let(::amountInput).orEmpty())
+        mutableStateOf(editingExpense?.amount?.let { cents ->
+            val whole = cents / 100L
+            val fraction = (cents % 100L).toInt()
+            when {
+                fraction == 0 -> whole.toString()
+                fraction % 10 == 0 -> "$whole.\${fraction / 10}"
+                else -> "$whole.\${fraction.toString().padStart(2, '0')}"
+            }
+        }.orEmpty())
     }
     val cents = parseAmountToCents(amount)
-    val valid = title.isNotBlank() && cents != null
+    val valid = title.trim().isNotEmpty() && cents != null
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
 
@@ -265,6 +271,8 @@ private fun AddExpenseForm(
         val cleanTitle = title.trim()
         if (cleanTitle.isEmpty()) return
         onSave(editingExpense, cleanTitle, amountCents)
+        title = ""
+        amount = ""
         focusManager.clearFocus()
         keyboard?.hide()
     }
@@ -274,7 +282,7 @@ private fun AddExpenseForm(
             OutlinedTextField(
                 value = title,
                 onValueChange = { if (it.length <= 30) title = it },
-                label = { Text("事项") },
+                label = { Text("事项名称") },
                 singleLine = true,
                 modifier = Modifier.weight(1f),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
@@ -285,17 +293,16 @@ private fun AddExpenseForm(
                     val filtered = buildString {
                         var dotSeen = false
                         var decimals = 0
+                        var wholeDigits = 0
                         for (ch in raw) {
                             when {
-                                ch in '0'..'9' -> {
-                                    if (dotSeen) {
-                                        if (decimals < 2) {
-                                            append(ch)
-                                            decimals++
-                                        }
-                                    } else if (count { it in '0'..'9' } < 9) {
-                                        append(ch)
-                                    }
+                                ch.isDigit() && !dotSeen && wholeDigits < 9 -> {
+                                    append(ch)
+                                    wholeDigits++
+                                }
+                                ch.isDigit() && dotSeen && decimals < 2 -> {
+                                    append(ch)
+                                    decimals++
                                 }
                                 ch == '.' && !dotSeen -> {
                                     append(ch)
@@ -313,43 +320,28 @@ private fun AddExpenseForm(
                     imeAction = ImeAction.Done
                 ),
                 keyboardActions = KeyboardActions(onDone = { if (valid) submit() }),
-                modifier = Modifier.weight(0.7f)
+                modifier = Modifier.weight(0.75f)
             )
         }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Button(
-                onClick = ::submit,
-                enabled = valid,
-                modifier = Modifier.weight(1f).height(48.dp),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Text(if (editingExpense == null) "添加支出" else "保存修改")
-            }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (editingExpense != null) {
                 TextButton(
                     onClick = {
+                        title = ""
+                        amount = ""
                         onCancelEdit()
-                        focusManager.clearFocus()
-                        keyboard?.hide()
                     },
-                    modifier = Modifier.height(48.dp)
-                ) {
-                    Text("取消")
-                }
+                    modifier = Modifier.weight(1f)
+                ) { Text("取消") }
+            }
+            Button(
+                onClick = { submit() },
+                enabled = valid,
+                modifier = Modifier.weight(2f).height(48.dp),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text(if (editingExpense == null) "添加支出" else "保存修改", fontWeight = FontWeight.Medium)
             }
         }
-    }
-}
-
-private fun amountInput(cents: Long): String {
-    val yuan = cents / 100L
-    val remainder = cents % 100L
-    return when {
-        remainder == 0L -> yuan.toString()
-        remainder % 10L == 0L -> "$yuan.${remainder / 10L}"
-        else -> "$yuan.${remainder.toString().padStart(2, '0')}"
     }
 }
