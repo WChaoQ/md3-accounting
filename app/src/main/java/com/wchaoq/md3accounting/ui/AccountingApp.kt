@@ -127,7 +127,7 @@ fun AccountingApp(
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(Modifier.size(8.dp))
-                        Text(if (tab == 0) "支出" else "统计")
+                        Text(if (tab == 0) "记录" else "统计")
                     }
                 },
                 actions = {
@@ -174,7 +174,7 @@ fun AccountingApp(
                     selected = tab == 0,
                     onClick = { tab = 0 },
                     icon = { Icon(painterResource(R.drawable.ic_calendar), contentDescription = null) },
-                    label = { Text("支出") }
+                    label = { Text("记录") }
                 )
                 NavigationBarItem(
                     selected = tab == 1,
@@ -227,7 +227,7 @@ fun AccountingApp(
                 ) {
                     Text("由 GPT、Grok、Gemini、Claude 制作", color = scheme.onSurface)
                     Text("制作日期：2026-10-24", color = scheme.onSurfaceVariant)
-                    Text("版本：1.0.2（3）", color = scheme.onSurfaceVariant)
+                    Text("版本：1.0.3（4）", color = scheme.onSurfaceVariant)
                     Text(
                         "wchaoq",
                         modifier = Modifier.fillMaxWidth().padding(top = 16.dp),

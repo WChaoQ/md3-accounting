@@ -14,8 +14,8 @@ android {
         applicationId = "com.wchaoq.exp"
         minSdk = 26
         targetSdk = 35
-        versionCode = 3
-        versionName = "1.0.2"
+        versionCode = 4
+        versionName = "1.0.3"
         resourceConfigurations += listOf("zh-rCN")
         dependenciesInfo {
             includeInApk = false
@@ -56,7 +56,6 @@ dependencies {
     implementation(composeBom)
 
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.compose.ui)
     debugImplementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)

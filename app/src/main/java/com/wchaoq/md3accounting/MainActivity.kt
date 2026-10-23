@@ -9,7 +9,6 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wchaoq.md3accounting.data.ExpenseRepository
 import com.wchaoq.md3accounting.data.ThemeStore
@@ -25,11 +24,8 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        val splash = installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-
-        splash.setKeepOnScreenCondition { !vm.themeState.value.ready }
 
         setContent {
             val theme by vm.themeState.collectAsStateWithLifecycle()
