@@ -137,9 +137,6 @@ fun AccountingApp(
                     state = vm.statsState.collectAsStateWithLifecycle().value,
                     onChangeMonth = vm::changeMonth,
                     onStepYear = vm::stepYear,
-                    onOpenMonth = vm::openMonth,
-                    onPickDay = vm::pickDay,
-                    onNavigateToHome = { tab = 0 },
                     onExportCsv = {
                         vm.exportCsv { csv ->
                             val sendIntent = Intent(Intent.ACTION_SEND).apply {
@@ -170,6 +167,8 @@ fun AccountingApp(
                 ThemeSwatches(
                     currentHue = theme.prefs.hue,
                     dark = dark,
+                    dynamicColor = theme.prefs.dynamicColor,
+                    onToggleDynamic = vm::setDynamicColor,
                     onSelect = { vm.setHue(it) }
                 )
             },
