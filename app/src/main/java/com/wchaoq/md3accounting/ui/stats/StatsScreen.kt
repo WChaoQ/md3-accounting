@@ -41,8 +41,7 @@ fun StatsScreen(
     onChangeMonth: (Int) -> Unit,
     onStepYear: (Int) -> Unit,
     onOpenMonth: (Int) -> Unit,
-    onPickDay: (Int) -> Unit,
-    onExportCsv: () -> Unit
+    onPickDay: (Int) -> Unit
 ) {
     val ym = state.yearMonth
     val scheme = MaterialTheme.colorScheme
