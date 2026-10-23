@@ -61,7 +61,6 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
-    implementation(libs.androidx.profileinstaller)
     // One-shot migration from legacy DataStore JSON
     implementation(libs.kotlinx.serialization.json)
 
