@@ -26,6 +26,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,6 +44,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.wchaoq.md3accounting.R
 import com.wchaoq.md3accounting.HomeUiState
+import com.wchaoq.md3accounting.data.Expense
 import com.wchaoq.md3accounting.data.Expense
 import com.wchaoq.md3accounting.ui.components.EmptyDay
 import com.wchaoq.md3accounting.ui.components.ExpenseItem
@@ -171,7 +173,7 @@ private fun CalendarGrid(
     yearMonth: YearMonth,
     selected: LocalDate,
     today: LocalDate,
-    dayTotals: LongArray,
+    dayTotals: List<Long>,
     onSelect: (LocalDate) -> Unit
 ) {
     val firstDow = yearMonth.atDay(1).dayOfWeek.value % 7
@@ -243,9 +245,19 @@ private fun CalendarGrid(
 }
 
 @Composable
-private fun AddExpenseForm(onAdd: (String, Long) -> Unit) {
+private fun AddExpenseForm(
+    initialExpense: Expense?,
+    onAdd: (String, Long) -> Unit,
+    onUpdate: (Expense, String, Long) -> Unit,
+    onCancelEdit: () -> Unit
+) {
     var title by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
+
+    LaunchedEffect(initialExpense?.id) {
+        title = initialExpense?.title.orEmpty()
+        amount = initialExpense?.amount?.let(::amountInput).orEmpty()
+    }
     val cents = parseAmountToCents(amount)
     val valid = title.trim().isNotEmpty() && cents != null
     val focusManager = LocalFocusManager.current
@@ -254,9 +266,12 @@ private fun AddExpenseForm(onAdd: (String, Long) -> Unit) {
     fun submit() {
         val amountCents = parseAmountToCents(amount) ?: return
         if (title.trim().isEmpty()) return
-        onAdd(title.trim(), amountCents)
+        val current = initialExpense
+        if (current == null) onAdd(title.trim(), amountCents)
+        else onUpdate(current, title.trim(), amountCents)
         title = ""
         amount = ""
+        onCancelEdit()
         focusManager.clearFocus()
         keyboard?.hide()
     }
@@ -312,7 +327,29 @@ private fun AddExpenseForm(onAdd: (String, Long) -> Unit) {
             modifier = Modifier.fillMaxWidth().height(48.dp),
             shape = RoundedCornerShape(20.dp)
         ) {
-            Text("添加支出", fontWeight = FontWeight.Medium)
+            Text(if (initialExpense == null) "添加支出" else "保存修改", fontWeight = FontWeight.Medium)
         }
+        if (initialExpense != null) {
+            TextButton(
+                onClick = {
+                    title = ""
+                    amount = ""
+                    onCancelEdit()
+                    focusManager.clearFocus()
+                    keyboard?.hide()
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) { Text("取消编辑") }
+        }
+    }
+}
+
+private fun amountInput(cents: Long): String {
+    val yuan = cents / 100L
+    val remainder = cents % 100L
+    return when {
+        remainder == 0L -> yuan.toString()
+        remainder % 10L == 0L -> "$yuan.${remainder / 10L}"
+        else -> "$yuan.${remainder.toString().padStart(2, '0')}"
     }
 }
