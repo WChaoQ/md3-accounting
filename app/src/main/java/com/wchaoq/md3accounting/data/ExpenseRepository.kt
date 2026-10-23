@@ -52,11 +52,6 @@ class ExpenseRepository(private val context: Context) {
         return if (n > 0) existing.toDomain() else null
     }
 
-    suspend fun restore(expense: Expense): Boolean = runCatching {
-        dao.insert(expense.toEntity())
-        true
-    }.getOrDefault(false)
-
     /**
      * One-shot migration from legacy DataStore JSON (`records_v2`).
      * Supports both Double and Long amount fields. Clears the key after success.
