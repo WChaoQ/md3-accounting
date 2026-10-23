@@ -2,9 +2,7 @@ name: Android CI
 # Keep the isolated gpt branch buildable before any main-branch merge.
 
 on:
-  # One final validation build for the completed gpt branch; pull requests stay manual.
-  push:
-    branches: [gpt]
+  # Manual runs only after the one final validation build. Code pushes and PRs do not trigger builds.
   workflow_dispatch:
 
 # Keep only the newest build for each branch to avoid wasting runner time.
