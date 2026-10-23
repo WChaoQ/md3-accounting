@@ -45,7 +45,6 @@ import androidx.compose.ui.unit.sp
 import com.wchaoq.md3accounting.R
 import com.wchaoq.md3accounting.HomeUiState
 import com.wchaoq.md3accounting.data.Expense
-import com.wchaoq.md3accounting.data.Expense
 import com.wchaoq.md3accounting.ui.components.EmptyDay
 import com.wchaoq.md3accounting.ui.components.ExpenseItem
 import com.wchaoq.md3accounting.ui.components.MdCard
@@ -246,52 +245,36 @@ private fun CalendarGrid(
 
 @Composable
 private fun AddExpenseForm(
-    initialExpense: Expense?,
-    onAdd: (String, Long) -> Unit,
-    onUpdate: (Expense, String, Long) -> Unit,
+    editingExpense: Expense?,
+    onSave: (Expense?, String, Long) -> Unit,
     onCancelEdit: () -> Unit
 ) {
-    var title by remember(editingExpense?.id) { mutableStateOf(editingExpense?.title.orEmpty()) }
-    var amount by remember(editingExpense?.id) {
-        mutableStateOf(editingExpense?.amount?.let { cents ->
-            val whole = cents / 100L
-            val fraction = (cents % 100L).toInt()
-            when {
-                fraction == 0 -> whole.toString()
-                fraction % 10 == 0 -> "$whole.\${fraction / 10}"
-                else -> "$whole.\${fraction.toString().padStart(2, '0')}"
-            }
-        }.orEmpty())
+    var title by remember(editingExpense?.id) {
+        mutableStateOf(editingExpense?.title.orEmpty())
     }
-
-    LaunchedEffect(initialExpense?.id) {
-        title = initialExpense?.title.orEmpty()
-        amount = initialExpense?.amount?.let(::amountInput).orEmpty()
+    var amount by remember(editingExpense?.id) {
+        mutableStateOf(editingExpense?.amount?.let(::amountInput).orEmpty())
     }
     val cents = parseAmountToCents(amount)
-    val valid = title.trim().isNotEmpty() && cents != null
+    val valid = title.isNotBlank() && cents != null
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
 
     fun submit() {
         val amountCents = parseAmountToCents(amount) ?: return
-        if (title.trim().isEmpty()) return
-        val current = initialExpense
-        if (current == null) onAdd(title.trim(), amountCents)
-        else onUpdate(current, title.trim(), amountCents)
-        title = ""
-        amount = ""
-        onCancelEdit()
+        val cleanTitle = title.trim()
+        if (cleanTitle.isEmpty()) return
+        onSave(editingExpense, cleanTitle, amountCents)
         focusManager.clearFocus()
         keyboard?.hide()
     }
 
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             OutlinedTextField(
                 value = title,
                 onValueChange = { if (it.length <= 30) title = it },
-                label = { Text("事项名称") },
+                label = { Text("事项") },
                 singleLine = true,
                 modifier = Modifier.weight(1f),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
@@ -304,13 +287,15 @@ private fun AddExpenseForm(
                         var decimals = 0
                         for (ch in raw) {
                             when {
-                                ch.isDigit() -> {
+                                ch in '0'..'9' -> {
                                     if (dotSeen) {
                                         if (decimals < 2) {
                                             append(ch)
                                             decimals++
                                         }
-                                    } else if (count { it.isDigit() } < 9) append(ch)
+                                    } else if (count { it in '0'..'9' } < 9) {
+                                        append(ch)
+                                    }
                                 }
                                 ch == '.' && !dotSeen -> {
                                     append(ch)
@@ -328,31 +313,33 @@ private fun AddExpenseForm(
                     imeAction = ImeAction.Done
                 ),
                 keyboardActions = KeyboardActions(onDone = { if (valid) submit() }),
-                modifier = Modifier.weight(0.55f)
+                modifier = Modifier.weight(0.7f)
             )
         }
-        if (editingExpense != null) {
-            TextButton(onClick = onCancelEdit) { Text("取消编辑") }
-        }
-        Button(
-            onClick = { submit() },
-            enabled = valid,
-            modifier = Modifier.fillMaxWidth().height(48.dp),
-            shape = RoundedCornerShape(20.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Text(if (initialExpense == null) "添加支出" else "保存修改", fontWeight = FontWeight.Medium)
-        }
-        if (initialExpense != null) {
-            TextButton(
-                onClick = {
-                    title = ""
-                    amount = ""
-                    onCancelEdit()
-                    focusManager.clearFocus()
-                    keyboard?.hide()
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) { Text("取消编辑") }
+            Button(
+                onClick = ::submit,
+                enabled = valid,
+                modifier = Modifier.weight(1f).height(48.dp),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Text(if (editingExpense == null) "添加支出" else "保存修改")
+            }
+            if (editingExpense != null) {
+                TextButton(
+                    onClick = {
+                        onCancelEdit()
+                        focusManager.clearFocus()
+                        keyboard?.hide()
+                    },
+                    modifier = Modifier.height(48.dp)
+                ) {
+                    Text("取消")
+                }
+            }
         }
     }
 }
