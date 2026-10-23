@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -55,6 +57,7 @@ fun AccountingApp(
 ) {
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var showTheme by rememberSaveable { mutableStateOf(false) }
+    var showAppearanceMenu by rememberSaveable { mutableStateOf(false) }
     val snackHost = remember { SnackbarHostState() }
     val scheme = MaterialTheme.colorScheme
     val context = LocalContext.current
@@ -84,14 +87,35 @@ fun AccountingApp(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { showTheme = true }) {
-                        Icon(painterResource(R.drawable.ic_palette), contentDescription = "主题颜色")
-                    }
-                    IconButton(onClick = { vm.toggleDark(systemDark) }) {
-                        Icon(
-                            painterResource(if (dark) R.drawable.ic_light_mode else R.drawable.ic_dark_mode),
-                            contentDescription = "切换深色模式"
-                        )
+                    Box {
+                        IconButton(onClick = { showAppearanceMenu = true }) {
+                            Icon(painterResource(R.drawable.ic_palette), contentDescription = "外观设置")
+                        }
+                        DropdownMenu(
+                            expanded = showAppearanceMenu,
+                            onDismissRequest = { showAppearanceMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("主题颜色") },
+                                leadingIcon = {
+                                    Icon(painterResource(R.drawable.ic_palette), contentDescription = null)
+                                },
+                                onClick = { showAppearanceMenu = false; showTheme = true }
+                            )
+                            DropdownMenuItem(
+                                text = { Text(if (dark) "切换到浅色模式" else "切换到深色模式") },
+                                leadingIcon = {
+                                    Icon(
+                                        painterResource(if (dark) R.drawable.ic_light_mode else R.drawable.ic_dark_mode),
+                                        contentDescription = null
+                                    )
+                                },
+                                onClick = {
+                                    showAppearanceMenu = false
+                                    vm.toggleDark(systemDark)
+                                }
+                            )
+                        }
                     }
                 }
             )
