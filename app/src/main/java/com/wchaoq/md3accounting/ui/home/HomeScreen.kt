@@ -223,7 +223,7 @@ private fun CalendarGrid(
                                 if (total > 0) {
                                     Text(
                                         fmtAmount(total),
-                                        fontSize = 10.sp,
+                                        fontSize = 12.sp,
                                         color = if (isSel) scheme.onPrimary else scheme.onSurfaceVariant,
                                         fontWeight = if (isSel) FontWeight.Medium else FontWeight.Normal,
                                         maxLines = 1
@@ -283,7 +283,7 @@ private fun AddExpenseForm(onAdd: (String, Long) -> Unit) {
                                             append(ch)
                                             decimals++
                                         }
-                                    } else append(ch)
+                                    } else if (count { it.isDigit() } < 9) append(ch)
                                 }
                                 ch == '.' && !dotSeen -> {
                                     append(ch)
