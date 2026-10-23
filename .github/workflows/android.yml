@@ -1,17 +1,23 @@
-name: Android CI
-# Keep the isolated gpt branch buildable before any main-branch merge.
+name: Android CI and Release
 
 on:
-  # Manual runs only. Code pushes and PRs do not trigger builds.
+  push:
+    branches:
+      - gpt
+    tags:
+      - "v*"
   workflow_dispatch:
 
-# Keep only the newest build for each branch to avoid wasting runner time.
+permissions:
+  contents: write
+
 concurrency:
   group: android-ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   build:
+    name: Test and build APKs
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -21,51 +27,64 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: "17"
-          distribution: "temurin"
+          distribution: temurin
+          cache: gradle
 
-      - name: Install Android command-line tools
-        run: |
-          ANDROID_HOME="$HOME/android-sdk"
-          mkdir -p "$ANDROID_HOME/cmdline-tools"
-          cd /tmp
-          curl -fsSL -o cmdtools.zip \
-            https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip
-          unzip -q cmdtools.zip
-          mv cmdline-tools "$ANDROID_HOME/cmdline-tools/latest"
-          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
-          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> "$GITHUB_ENV"
-          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
-          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
 
-      - name: Accept licenses and install packages
-        run: |
-          mkdir -p "$ANDROID_HOME/licenses"
-          echo -e "24333f8a63b6825ea9c5514f83c2829b004d1fee" > "$ANDROID_HOME/licenses/android-sdk-license"
-          echo -e "84831b9409646a918e30573bab4c6c987be6ef0b" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
-          yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses >/dev/null || true
-          sdkmanager --sdk_root="$ANDROID_HOME" \
-            "platform-tools" \
-            "platforms;android-35" \
-            "build-tools;35.0.0"
+      - name: Install Android SDK packages
+        run: sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Setup Gradle
+      - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
 
-      - name: Run tests and build debug/release APKs
+      - name: Run unit tests and build debug/release APKs
         run: gradle :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease --stacktrace --no-daemon
 
-      - name: Upload debug APK
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+      - name: Verify release APK signature and package metadata
+        run: |
+          APK="app/build/outputs/apk/release/app-release.apk"
+          test -s "$APK"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$APK"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -E "package: name='com.wchaoq.md3accounting' versionCode='2' versionName='1.0.1'"
 
-      - name: Upload release APK
-        if: success()
+      - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
-          path: app/build/outputs/apk/release/app-release-unsigned.apk
+          name: md3-accounting-debug-1.0.1
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload signed release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: md3-accounting-release-1.0.1
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Prepare release tag
+        id: release_meta
+        if: startsWith(github.ref, 'refs/tags/')
+        run: echo "tag_name=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare CI preview tag
+        id: preview_meta
+        if: github.ref == 'refs/heads/gpt'
+        run: echo "tag_name=gpt-build-${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish GitHub Release
+        if: success() && (github.ref == 'refs/heads/gpt' || startsWith(github.ref, 'refs/tags/'))
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_meta.outputs.tag_name || steps.preview_meta.outputs.tag_name }}
+          name: MD3 Accounting 1.0.1 - ${{ steps.release_meta.outputs.tag_name || format('gpt preview #{0}', github.run_number) }}
+          body_path: CHANGELOG.md
+          files: app/build/outputs/apk/release/app-release.apk
+          draft: false
+          prerelease: ${{ github.ref == 'refs/heads/gpt' }}
+          make_latest: false
