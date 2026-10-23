@@ -8,18 +8,23 @@ fun money(cents: Long): String {
     return "¥%,.2f".format(Locale.US, yuan)
 }
 
-/** Compact amount for calendar cells, rounded to one decimal using integer arithmetic. */
+/** Compact amount for calendar cells without losing cents to floating-point rounding. */
 fun fmtAmount(cents: Long): String {
-    val tenths = (cents.coerceAtLeast(0L) + 5L) / 10L
-    if (tenths >= 100_000L) {
-        val tenThousandsTenths = (tenths + 5_000L) / 10_000L
-        val whole = tenThousandsTenths / 10L
-        val decimal = tenThousandsTenths % 10L
+    val value = cents.coerceAtLeast(0L)
+    if (value >= 1_000_000L) {
+        val tenthsOfTenThousands = (value + 50_000L) / 100_000L
+        val whole = tenthsOfTenThousands / 10L
+        val decimal = tenthsOfTenThousands % 10L
         return if (decimal == 0L) "${whole}万" else "${whole}.${decimal}万"
     }
-    val yuan = tenths / 10L
-    val decimal = tenths % 10L
-    return if (decimal == 0L) yuan.toString() else "$yuan.$decimal"
+
+    val yuan = value / 100L
+    val remainder = (value % 100L).toInt()
+    return when {
+        remainder == 0 -> yuan.toString()
+        remainder % 10 == 0 -> "$yuan.${remainder / 10}"
+        else -> "$yuan.${remainder.toString().padStart(2, '0')}"
+    }
 }
 
 /** Parse user input like "12.5" or ".5" to cents; null if invalid. */
