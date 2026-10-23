@@ -42,6 +42,9 @@ interface ExpenseDao {
     @Query("SELECT * FROM expenses WHERE id = :id LIMIT 1")
     suspend fun getById(id: String): ExpenseEntity?
 
+    @Query("SELECT * FROM expenses ORDER BY date DESC, createdAt DESC, id DESC")
+    suspend fun getAll(): List<ExpenseEntity>
+
     @Query("SELECT COUNT(*) FROM expenses")
     suspend fun count(): Int
 }
