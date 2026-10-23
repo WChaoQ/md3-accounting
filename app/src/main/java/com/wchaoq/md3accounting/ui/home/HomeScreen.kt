@@ -99,7 +99,7 @@ fun HomeScreen(
                                     datePickerState.selectedDateMillis = state.selectedDate.atStartOfDay(ZoneId.of("UTC")).toInstant().toEpochMilli()
                                     showDatePicker = true
                                 }) {
-                                    Icon(painterResource(R.drawable.ic_chevron_right), "选择日期")
+                                    Icon(painterResource(R.drawable.ic_expand_more), "选择日期")
                                 }
                             }
                             Text("当日支出", style = MaterialTheme.typography.labelMedium, color = scheme.onSurfaceVariant)
@@ -155,7 +155,7 @@ fun HomeScreen(
             },
             dismissButton = { TextButton(onClick = { showDatePicker = false }) { Text("取消") } }
         ) {
-            DatePicker(state = datePickerState, title = { Text("选择日期") })
+            DatePicker(state = datePickerState, title = { Text("选择日期", modifier = Modifier.padding(start = 24.dp, top = 8.dp)) })
         }
     }
 
