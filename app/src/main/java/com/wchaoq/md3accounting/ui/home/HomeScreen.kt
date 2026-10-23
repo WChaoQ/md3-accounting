@@ -69,6 +69,7 @@ fun HomeScreen(
     val scheme = MaterialTheme.colorScheme
     var editingExpense by remember(state.selectedDate) { mutableStateOf<Expense?>(null) }
     var showEntryDialog by remember(state.selectedDate) { mutableStateOf(false) }
+    var deletingExpense by remember { mutableStateOf<Expense?>(null) }
 
     Box(Modifier.fillMaxSize()) {
         LazyColumn(
@@ -151,7 +152,7 @@ fun HomeScreen(
                             editingExpense = expense
                             showEntryDialog = true
                         },
-                        onDelete = { onDelete(expense.id) }
+                        onLongPress = { deletingExpense = expense }
                     )
                 }
             }
@@ -190,6 +191,30 @@ fun HomeScreen(
             shape = RoundedCornerShape(28.dp)
         )
     }
+    deletingExpense?.let { expense ->
+        AlertDialog(
+            onDismissRequest = { deletingExpense = null },
+            title = { Text("删除这笔支出？") },
+            text = { Text("${expense.title} · ${money(expense.amount)}") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDelete(expense.id)
+                        deletingExpense = null
+                    }
+                ) {
+                    Text("删除", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { deletingExpense = null }) {
+                    Text("取消")
+                }
+            },
+            shape = RoundedCornerShape(28.dp)
+        )
+    }
+
 }
 
 @Composable
