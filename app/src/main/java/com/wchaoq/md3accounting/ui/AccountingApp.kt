@@ -135,10 +135,10 @@ fun AccountingApp(
                 )
                 1 -> StatsScreen(
                     state = vm.statsState.collectAsStateWithLifecycle().value,
-                    onChangeMonth = vm::changeMonth,
+                    onChangeMonth = vm::changeStatsMonth,
                     onStepYear = vm::stepYear,
-                    onOpenMonth = vm::openMonth,
-                    onPickDay = vm::pickDay,
+                    onOpenMonth = vm::openStatsMonth,
+                    onPickDay = vm::pickStatsDay,
                     onExportCsv = {
                         vm.exportCsv { csv ->
                             val sendIntent = Intent(Intent.ACTION_SEND).apply {
