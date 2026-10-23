@@ -77,10 +77,6 @@ class AccountingViewModel(
 
     private val monthRange = yearMonth.map { it.startDateInt() to it.endDateInt() }
 
-    private val monthTotalFlow = monthRange.flatMapLatest { (s, e) ->
-        repo.observeRangeTotal(s, e)
-    }
-
     private val daySumsFlow = monthRange.flatMapLatest { (s, e) ->
         repo.observeDaySums(s, e)
     }
@@ -92,10 +88,9 @@ class AccountingViewModel(
     val homeState: StateFlow<HomeUiState> = combine(
         yearMonth,
         selectedDate,
-        monthTotalFlow,
         daySumsFlow,
         dayItemsFlow
-    ) { ym, sel, monthTotal, daySums, dayItems ->
+    ) { ym, sel, daySums, dayItems ->
         val days = ym.lengthOfMonth()
         val arr = LongArray(days)
         daySums.forEach { sum ->
@@ -105,7 +100,7 @@ class AccountingViewModel(
         HomeUiState(
             yearMonth = ym,
             selectedDate = sel,
-            monthTotal = monthTotal,
+            monthTotal = daySums.sumOf { it.total },
             dayTotals = arr,
             dayItems = dayItems,
             dayTotal = dayItems.sumOf { it.amount }
@@ -116,16 +111,8 @@ class AccountingViewModel(
         (y * 10_000 + 101) to (y * 10_000 + 1231)
     }
 
-    private val yearTotalFlow = yearRange.flatMapLatest { (s, e) ->
-        repo.observeYearTotal(s, e)
-    }
-
     private val monthSumsFlow = yearRange.flatMapLatest { (s, e) ->
         repo.observeMonthSums(s, e)
-    }
-
-    private val statsMonthTotalFlow = monthRange.flatMapLatest { (s, e) ->
-        repo.observeRangeTotal(s, e)
     }
 
     private val statsDaySumsFlow = monthRange.flatMapLatest { (s, e) ->
@@ -133,18 +120,14 @@ class AccountingViewModel(
     }
 
     private data class StatsNav(val ym: YearMonth, val sy: Int, val sel: LocalDate)
-    private data class StatsMonthData(val monthTotal: Long, val daySums: List<com.wchaoq.md3accounting.data.local.DaySum>)
-    private data class StatsYearData(val yearTotal: Long, val monthSums: List<com.wchaoq.md3accounting.data.local.MonthSum>)
+    private data class StatsMonthData(val daySums: List<com.wchaoq.md3accounting.data.local.DaySum>)
+    private data class StatsYearData(val monthSums: List<com.wchaoq.md3accounting.data.local.MonthSum>)
 
     private val statsNav = combine(yearMonth, statsYear, selectedDate) { ym, sy, sel ->
         StatsNav(ym, sy, sel)
     }
-    private val statsMonthData = combine(statsMonthTotalFlow, statsDaySumsFlow) { total, sums ->
-        StatsMonthData(total, sums)
-    }
-    private val statsYearData = combine(yearTotalFlow, monthSumsFlow) { total, sums ->
-        StatsYearData(total, sums)
-    }
+    private val statsMonthData = statsDaySumsFlow.map { sums -> StatsMonthData(sums) }
+    private val statsYearData = monthSumsFlow.map { sums -> StatsYearData(sums) }
 
     val statsState: StateFlow<StatsUiState> = combine(
         statsNav, statsMonthData, statsYearData
@@ -168,9 +151,9 @@ class AccountingViewModel(
             yearMonth = nav.ym,
             statsYear = nav.sy,
             selectedDayIndex = selIdx,
-            monthTotal = monthData.monthTotal,
+            monthTotal = monthData.daySums.sumOf { it.total },
             dayVals = dayVals,
-            yearTotal = yearData.yearTotal,
+            yearTotal = yearData.monthSums.sumOf { it.total },
             monthVals = monthVals,
             highlightMonthIndex = hlMonth
         )
