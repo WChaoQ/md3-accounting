@@ -256,8 +256,8 @@ private fun AddExpenseForm(
             val fraction = (cents % 100L).toInt()
             when {
                 fraction == 0 -> whole.toString()
-                fraction % 10 == 0 -> "$whole.\${fraction / 10}"
-                else -> "$whole.\${fraction.toString().padStart(2, '0')}"
+                fraction % 10 == 0 -> whole.toString() + "." + (fraction / 10)
+                else -> whole.toString() + "." + fraction.toString().padStart(2, '0')
             }
         }.orEmpty())
     }
