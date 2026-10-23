@@ -159,17 +159,24 @@ fun StatsScreen(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            Icon(
+                painterResource(R.drawable.ic_receipt),
+                contentDescription = null,
+                tint = scheme.primary,
+                modifier = Modifier.padding(end = 8.dp)
+            )
             Column(Modifier.weight(1f)) {
                 Text(
                     if (selectedDayIndex >= 0) "${ym.monthValue}月${selectedDayIndex + 1}日明细"
                     else "支出明细",
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    color = scheme.onSurface
                 )
                 Text(
-                    if (selectedDayIndex >= 0) "点击同一天柱形可收起明细" else "点击上方日期柱形查看当天记录",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = scheme.onSurfaceVariant
+                    if (selectedDayIndex >= 0) "再次点击当前日期可收起" else "选择柱形查看当天记录",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = scheme.onSurfaceVariant.copy(alpha = 0.9f)
                 )
             }
         }
@@ -177,7 +184,7 @@ fun StatsScreen(
         if (selectedDayIndex < 0) {
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Text(
-                    "选择某一天，查看事项和金额",
+                    "选择日期查看支出明细",
                     style = MaterialTheme.typography.bodyMedium,
                     color = scheme.onSurfaceVariant
                 )
