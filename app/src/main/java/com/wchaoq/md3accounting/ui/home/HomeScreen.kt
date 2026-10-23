@@ -20,7 +20,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -73,7 +73,7 @@ fun HomeScreen(
     Box(Modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 112.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item(key = "month-summary") {
@@ -155,18 +155,17 @@ fun HomeScreen(
                     )
                 }
             }
-            item(key = "bottom-space") { Spacer(Modifier.height(88.dp)) }
         }
 
-        ExtendedFloatingActionButton(
+        FloatingActionButton(
             onClick = {
                 editingExpense = null
                 showEntryDialog = true
             },
-            icon = { Text("+", style = MaterialTheme.typography.headlineSmall) },
-            text = { Text("记一笔") },
             modifier = Modifier.align(Alignment.BottomEnd).padding(end = 20.dp, bottom = 16.dp)
-        )
+        ) {
+            Text("+", style = MaterialTheme.typography.headlineMedium)
+        }
     }
 
     if (showEntryDialog) {
