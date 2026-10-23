@@ -38,7 +38,7 @@ data class HomeUiState(
     val yearMonth: YearMonth = YearMonth.now(),
     val selectedDate: LocalDate = LocalDate.now(),
     val monthTotal: Long = 0L,
-    val dayTotals: LongArray = LongArray(0),
+    val dayTotals: List<Long> = emptyList(),
     val dayItems: List<Expense> = emptyList(),
     val dayTotal: Long = 0L
 )
@@ -49,9 +49,9 @@ data class StatsUiState(
     val statsYear: Int = LocalDate.now().year,
     val selectedDayIndex: Int = -1,
     val monthTotal: Long = 0L,
-    val dayVals: LongArray = LongArray(0),
+    val dayVals: List<Long> = emptyList(),
     val yearTotal: Long = 0L,
-    val monthVals: LongArray = LongArray(12),
+    val monthVals: List<Long> = List(12) { 0L },
     val highlightMonthIndex: Int = -1
 )
 
@@ -95,7 +95,7 @@ class AccountingViewModel(
         dayItemsFlow
     ) { ym, sel, daySums, dayItems ->
         val days = ym.lengthOfMonth()
-        val arr = LongArray(days)
+        val arr = MutableList(days) { 0L }
         daySums.forEach { sum ->
             val day = sum.date.dayOfMonth()
             if (day in 1..days) arr[day - 1] = sum.total
@@ -104,7 +104,7 @@ class AccountingViewModel(
             yearMonth = ym,
             selectedDate = sel,
             monthTotal = daySums.sumOf { it.total },
-            dayTotals = arr,
+            dayTotals = arr.toList(),
             dayItems = dayItems,
             dayTotal = dayItems.sumOf { it.amount }
         )
@@ -136,12 +136,12 @@ class AccountingViewModel(
         statsNav, statsMonthData, statsYearData
     ) { nav, monthData, yearData ->
         val days = nav.ym.lengthOfMonth()
-        val dayVals = LongArray(days)
+        val dayVals = MutableList(days) { 0L }
         monthData.daySums.forEach { sum ->
             val day = sum.date.dayOfMonth()
             if (day in 1..days) dayVals[day - 1] = sum.total
         }
-        val monthVals = LongArray(12)
+        val monthVals = MutableList(12) { 0L }
         yearData.monthSums.forEach { ms ->
             val m = ms.yearMonth % 100
             if (m in 1..12) monthVals[m - 1] = ms.total
@@ -155,9 +155,9 @@ class AccountingViewModel(
             statsYear = nav.sy,
             selectedDayIndex = selIdx,
             monthTotal = monthData.daySums.sumOf { it.total },
-            dayVals = dayVals,
+            dayVals = dayVals.toList(),
             yearTotal = yearData.monthSums.sumOf { it.total },
-            monthVals = monthVals,
+            monthVals = monthVals.toList(),
             highlightMonthIndex = hlMonth
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), StatsUiState())
@@ -212,6 +212,15 @@ class AccountingViewModel(
             val ok = repo.add(e)
             if (ok) snackChannel.send(SnackEvent("已添加"))
             else snackChannel.send(SnackEvent("添加失败，请重试"))
+        }
+    }
+
+    fun updateExpense(expense: Expense, title: String, amountCents: Long) {
+        if (title.isBlank() || amountCents <= 0) return
+        val updated = expense.copy(title = title.trim(), amount = amountCents)
+        viewModelScope.launch {
+            if (repo.update(updated)) snackChannel.send(SnackEvent("已保存修改"))
+            else snackChannel.send(SnackEvent("保存失败，请重试"))
         }
     }
 
