@@ -130,7 +130,7 @@ fun AccountingApp(
                     onChangeMonth = vm::changeMonth,
                     onGoToday = vm::goToday,
                     onSelectDate = vm::selectDate,
-                    onAdd = vm::addExpense,
+                    onSave = vm::saveExpense,
                     onUpdate = vm::updateExpense,
                     onDelete = vm::deleteExpense
                 )
