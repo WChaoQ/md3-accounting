@@ -22,6 +22,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.Modifier
@@ -124,7 +125,7 @@ fun ExpenseItem(
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Medium
         )
-        IconButton(onClick = onDelete, modifier = Modifier.size(36.dp)) {
+        IconButton(onClick = onDelete, modifier = Modifier.size(48.dp)) {
             Icon(painterResource(R.drawable.ic_close), contentDescription = "删除", tint = scheme.onSurfaceVariant)
         }
     }
@@ -162,14 +163,15 @@ fun BarChart(
     modifier: Modifier = Modifier
 ) {
     val n = values.size.coerceAtLeast(1)
+    val currentOnBarClick = rememberUpdatedState(onBarClick)
     val max = values.maxOrNull()?.coerceAtLeast(1L) ?: 1L
     val scheme = MaterialTheme.colorScheme
-    val barColor = scheme.secondaryContainer
+    val barColor = scheme.primary.copy(alpha = 0.35f)
     val hlColor = scheme.primary
     val labelColor = scheme.onSurfaceVariant
     val textMeasurer = rememberTextMeasurer()
     val labelStyle = MaterialTheme.typography.labelSmall.merge(
-        TextStyle(color = labelColor, fontSize = 10.sp)
+        TextStyle(color = labelColor, fontSize = 12.sp)
     )
     val layouts = remember(values, highlightIndex, labelStyle) {
         Array(n) { i ->
@@ -185,7 +187,7 @@ fun BarChart(
             .pointerInput(n) {
                 detectTapGestures { offset ->
                     val idx = ((offset.x / size.width) * n).toInt().coerceIn(0, n - 1)
-                    onBarClick(idx)
+                    currentOnBarClick.value(idx)
                 }
             }
             .drawWithCache {
