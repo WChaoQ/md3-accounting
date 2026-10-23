@@ -15,6 +15,7 @@ abstract class AppDatabase : RoomDatabase() {
         private val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE expenses ADD COLUMN createdAt INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("DROP INDEX IF EXISTS index_expenses_date")
                 db.execSQL("CREATE INDEX IF NOT EXISTS index_expenses_date_createdAt ON expenses(date, createdAt)")
             }
         }
