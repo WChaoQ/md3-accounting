@@ -227,7 +227,7 @@ fun AccountingApp(
                 ) {
                     Text("由 GPT、Grok、Gemini、Claude 制作", color = scheme.onSurface)
                     Text("制作日期：2026-10-24", color = scheme.onSurfaceVariant)
-                    Text("版本：1.0.3（4）", color = scheme.onSurfaceVariant)
+                    Text("版本：1.0.4（5）", color = scheme.onSurfaceVariant)
                     Text(
                         "wchaoq",
                         modifier = Modifier.fillMaxWidth().padding(top = 16.dp),

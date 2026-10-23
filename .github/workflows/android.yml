@@ -65,12 +65,12 @@ jobs:
           APK="app/build/outputs/apk/release/app-release.apk"
           test -s "$APK"
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$APK"
-          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -E "package: name='com.wchaoq.exp' versionCode='4' versionName='1.0.3'"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | grep -E "package: name='com.wchaoq.exp' versionCode='5' versionName='1.0.4'"
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
         with:
-          name: zhi-chu-ji-lu-debug-1.0.3
+          name: zhi-chu-ji-lu-debug-1.0.4
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 14
@@ -78,7 +78,7 @@ jobs:
       - name: Upload signed release APK
         uses: actions/upload-artifact@v4
         with:
-          name: zhi-chu-ji-lu-release-1.0.3
+          name: zhi-chu-ji-lu-release-1.0.4
           path: app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 30
@@ -88,7 +88,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: gpt-build-${{ github.run_number }}
-          name: "支出记录 1.0.3 - gpt preview #${{ github.run_number }}"
+          name: "支出记录 1.0.4 - gpt preview #${{ github.run_number }}"
           body_path: CHANGELOG.md
           files: app/build/outputs/apk/release/app-release.apk
           draft: false

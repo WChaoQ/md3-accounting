@@ -29,6 +29,8 @@ import java.time.LocalDate
 import java.time.YearMonth
 import java.util.UUID
 
+private const val CSV_FORMAT_MARKER = "# EXPENSE_RECORDS_CSV_V1"
+
 data class SnackEvent(
     val message: String,
     val actionLabel: String? = null,
@@ -259,6 +261,7 @@ class AccountingViewModel(
             val expenses = withContext(Dispatchers.IO) { repo.allExpenses() }
             val csv = withContext(Dispatchers.Default) {
                 buildString {
+                    appendLine(CSV_FORMAT_MARKER)
                     appendLine("date,title,amount")
                     expenses.forEach { expense ->
                         val date = "${expense.date / 10_000}-${((expense.date / 100) % 100).toString().padStart(2, '0')}-${(expense.date % 100).toString().padStart(2, '0')}"
@@ -277,12 +280,16 @@ class AccountingViewModel(
     fun importCsv(raw: String) {
         viewModelScope.launch(Dispatchers.IO) {
             val lines = raw.removePrefix("\uFEFF").lineSequence().filter { it.isNotBlank() }.toList()
-            if (lines.size < 2) {
-                snackChannel.send(SnackEvent("CSV 文件没有可导入的记录"))
+            if (lines.firstOrNull()?.trim() != CSV_FORMAT_MARKER) {
+                snackChannel.send(SnackEvent("文件标识不匹配：请选择由支出记录导出的 CSV 文件"))
+                return@launch
+            }
+            if (lines.size < 3 || lines[1].trim() != "date,title,amount") {
+                snackChannel.send(SnackEvent("CSV 文件格式不正确或没有可导入的记录"))
                 return@launch
             }
             var imported = 0
-            lines.drop(1).forEach { line ->
+            lines.drop(2).forEach { line ->
                 val cells = parseCsvLine(line)
                 if (cells.size >= 3) {
                     val date = runCatching {
