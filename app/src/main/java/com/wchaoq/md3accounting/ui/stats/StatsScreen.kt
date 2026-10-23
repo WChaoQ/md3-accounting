@@ -13,6 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
@@ -31,7 +32,8 @@ fun StatsScreen(
     onChangeMonth: (Int) -> Unit,
     onStepYear: (Int) -> Unit,
     onOpenMonth: (Int) -> Unit,
-    onPickDay: (Int) -> Unit
+    onPickDay: (Int) -> Unit,
+    onExportCsv: () -> Unit
 ) {
     val ym = state.yearMonth
     val scheme = MaterialTheme.colorScheme
@@ -140,6 +142,9 @@ fun StatsScreen(
                     onBarClick = onOpenMonth
                 )
             }
+        }
+        TextButton(onClick = onExportCsv, modifier = Modifier.fillMaxWidth()) {
+            Text("导出 CSV 记录")
         }
     }
 }
