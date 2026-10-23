@@ -1,8 +1,5 @@
 package com.wchaoq.md3accounting.ui.home
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,7 +36,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
@@ -54,19 +50,15 @@ import com.wchaoq.md3accounting.ui.components.EmptyDay
 import com.wchaoq.md3accounting.ui.components.ExpenseItem
 import com.wchaoq.md3accounting.ui.components.MdCard
 import com.wchaoq.md3accounting.ui.components.SummaryCard
-import com.wchaoq.md3accounting.util.fmtAmount
 import com.wchaoq.md3accounting.util.money
 import com.wchaoq.md3accounting.util.parseAmountToCents
 import java.time.LocalDate
 import java.time.Instant
 import java.time.ZoneId
-import java.time.YearMonth
 
 @Composable
 fun HomeScreen(
     state: HomeUiState,
-    onChangeMonth: (Int) -> Unit,
-    onGoToday: () -> Unit,
     onSelectDate: (LocalDate) -> Unit,
     onSave: (Expense?, String, Long) -> Unit,
     onDelete: (String) -> Unit
@@ -211,91 +203,6 @@ fun HomeScreen(
         )
     }
 
-}
-
-@Composable
-private fun CalendarGrid(
-    yearMonth: YearMonth,
-    selected: LocalDate,
-    today: LocalDate,
-    dayTotals: List<Long>,
-    onSelect: (LocalDate) -> Unit
-) {
-    val firstDow = yearMonth.atDay(1).dayOfWeek.value % 7
-    val days = yearMonth.lengthOfMonth()
-    val cells = firstDow + days
-    val rows = (cells + 6) / 7
-    val scheme = MaterialTheme.colorScheme
-    val cellHeight = 62.dp
-
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        repeat(rows) { row ->
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                repeat(7) { col ->
-                    val idx = row * 7 + col
-                    val dayNum = idx - firstDow + 1
-                    if (dayNum in 1..days) {
-                        val date = yearMonth.atDay(dayNum)
-                        val total = dayTotals.getOrElse(dayNum - 1) { 0L }
-                        val isSel = date == selected
-                        val isToday = date == today
-                        Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(cellHeight)
-                                .clip(RoundedCornerShape(14.dp))
-                                .then(
-                                    if (isSel) Modifier.background(scheme.primary)
-                                    else if (isToday) Modifier.border(
-                                        1.5.dp, scheme.primary, RoundedCornerShape(14.dp)
-                                    )
-                                    else Modifier
-                                )
-                                .drawBehind {
-                                    if (isToday && !isSel) {
-                                        drawCircle(
-                                            color = scheme.primary,
-                                            radius = 2.dp.toPx(),
-                                            center = androidx.compose.ui.geometry.Offset(size.width / 2f, size.height - 5.dp.toPx())
-                                        )
-                                    }
-                                }
-                                .clickable { onSelect(date) }
-                                .padding(horizontal = 2.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(
-                                    "$dayNum",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = when {
-                                        isSel -> scheme.onPrimary
-                                        isToday -> scheme.primary
-                                        else -> scheme.onSurface
-                                    }
-                                )
-                                if (total > 0) {
-                                    Text(
-                                        fmtAmount(total),
-                                        fontSize = 11.sp,
-                                        color = if (isSel) scheme.onPrimary else scheme.onSurfaceVariant,
-                                        fontWeight = if (isSel) FontWeight.Medium else FontWeight.Normal,
-                                        maxLines = 1
-                                    )
-                                }
-                            }
-                        }
-                    } else {
-                        Spacer(Modifier.weight(1f).height(cellHeight))
-                    }
-                }
-            }
-        }
-    }
 }
 
 @Composable
