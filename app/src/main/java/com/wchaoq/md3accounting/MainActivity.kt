@@ -49,7 +49,11 @@ class MainActivity : ComponentActivity() {
                 enableEdgeToEdge(statusBarStyle = barStyle, navigationBarStyle = barStyle)
             }
 
-            MD3AccountingTheme(hue = theme.prefs.hue, darkTheme = dark) {
+            MD3AccountingTheme(
+                hue = theme.prefs.hue,
+                darkTheme = dark,
+                dynamicColor = theme.prefs.dynamicColor
+            ) {
                 AccountingApp(vm = vm, dark = dark, systemDark = systemDark)
             }
         }
