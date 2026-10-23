@@ -165,8 +165,6 @@ fun AccountingApp(
             when (tab) {
                 0 -> HomeScreen(
                     state = vm.homeState.collectAsStateWithLifecycle().value,
-                    onChangeMonth = vm::changeMonth,
-                    onGoToday = vm::goToday,
                     onSelectDate = vm::selectDate,
                     onSave = vm::saveExpense,
                     onDelete = vm::deleteExpense
@@ -176,9 +174,7 @@ fun AccountingApp(
                     onChangeMonth = vm::changeStatsMonth,
                     onStepYear = vm::stepYear,
                     onOpenMonth = vm::openStatsMonth,
-                    onPickDay = vm::pickStatsDay,
-                    onExportCsv = {}
-
+                    onPickDay = vm::pickStatsDay
                 )
             }
         }
