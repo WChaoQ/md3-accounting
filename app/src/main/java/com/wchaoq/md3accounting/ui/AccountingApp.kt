@@ -218,19 +218,17 @@ fun AccountingApp(
             },
             title = { Text("支出") },
             text = {
-                Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(12.dp)
+                ) {
                     Text("GPT · Grok · Gemini · Claude", color = scheme.onSurface)
-                    Text("wchaoq", modifier = Modifier.fillMaxWidth().padding(top = 12.dp), color = scheme.onSurfaceVariant.copy(alpha = 0.65f), textAlign = TextAlign.Center)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            painterResource(R.drawable.ic_ai),
-                            contentDescription = null,
-                            tint = scheme.primary,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(Modifier.size(8.dp))
-                        Text("GPT · Grok · Gemini · Claude", color = scheme.onSurfaceVariant)
-                    }
+                    Text(
+                        "wchaoq",
+                        modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                        color = scheme.onSurfaceVariant.copy(alpha = 0.55f),
+                        textAlign = TextAlign.Center
+                    )
                 }
             },
             confirmButton = {
