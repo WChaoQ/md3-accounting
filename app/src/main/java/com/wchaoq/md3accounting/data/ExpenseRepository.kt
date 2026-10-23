@@ -38,6 +38,8 @@ class ExpenseRepository(private val context: Context) {
         true
     }.getOrDefault(false)
 
+    suspend fun allExpenses(): List<Expense> = dao.getAll().map { it.toDomain() }
+
     /** Replace an existing record while preserving its ID, date and creation time. */
     suspend fun update(expense: Expense): Boolean = runCatching {
         dao.insert(expense.toEntity())
