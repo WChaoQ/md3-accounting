@@ -38,6 +38,12 @@ class ExpenseRepository(private val context: Context) {
         true
     }.getOrDefault(false)
 
+    /** Replace an existing record while preserving its ID, date and creation time. */
+    suspend fun update(expense: Expense): Boolean = runCatching {
+        dao.insert(expense.toEntity())
+        true
+    }.getOrDefault(false)
+
     /** @return removed expense, or null if not found */
     suspend fun delete(id: String): Expense? {
         val existing = dao.getById(id) ?: return null
