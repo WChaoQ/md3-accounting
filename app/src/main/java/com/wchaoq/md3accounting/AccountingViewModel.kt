@@ -269,6 +269,10 @@ class AccountingViewModel(
         viewModelScope.launch { themeStore.setHue(hue) }
     }
 
+    fun setDynamicColor(enabled: Boolean) {
+        viewModelScope.launch { themeStore.setDynamicColor(enabled) }
+    }
+
     fun toggleDark(systemDark: Boolean) {
         viewModelScope.launch {
             val effective = themeState.value.prefs.dark ?: systemDark
