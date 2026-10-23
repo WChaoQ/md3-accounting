@@ -80,12 +80,8 @@ fun buildColorScheme(hue: Int, dark: Boolean): androidx.compose.material3.ColorS
 }
 
 val ThemeHues = listOf(
-    "紫" to 265,
     "蓝" to 215,
-    "青" to 185,
     "绿" to 145,
     "金" to 45,
-    "橙" to 25,
-    "红" to 5,
-    "粉" to 330
+    "紫" to 265
 )
