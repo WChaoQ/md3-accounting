@@ -14,8 +14,8 @@ android {
         applicationId = "com.wchaoq.md3accounting"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
         resourceConfigurations += listOf("zh-rCN")
         dependenciesInfo {
             includeInApk = false
@@ -25,6 +25,8 @@ android {
 
     buildTypes {
         release {
+            // Produce an installable sideload APK in CI. For Play Store publishing, use a private release keystore.
+            signingConfig = signingConfigs.getByName("debug")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
