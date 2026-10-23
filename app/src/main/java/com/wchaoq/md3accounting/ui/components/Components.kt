@@ -4,6 +4,7 @@ import android.os.Build
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
@@ -91,14 +91,14 @@ fun SummaryCard(monthLabel: String, totalCents: Long) {
 fun ExpenseItem(
     expense: Expense,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onLongPress: () -> Unit
 ) {
     val scheme = MaterialTheme.colorScheme
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .clickable(onClick = onEdit)
+            .combinedClickable(onClick = onEdit, onLongClick = onLongPress)
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -130,9 +130,6 @@ fun ExpenseItem(
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Medium
         )
-        IconButton(onClick = onDelete, modifier = Modifier.size(48.dp)) {
-            Icon(painterResource(R.drawable.ic_close), contentDescription = "删除", tint = scheme.onSurfaceVariant)
-        }
     }
 }
 
