@@ -125,7 +125,7 @@ fun AccountingApp(
                         Icon(
                             painterResource(R.drawable.ic_launcher_foreground),
                             contentDescription = null,
-                            tint = scheme.primary,
+                            tint = androidx.compose.ui.graphics.Color.Unspecified,
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(Modifier.size(8.dp))
@@ -221,6 +221,16 @@ fun AccountingApp(
                 Column(verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
                     Text("简洁、轻量的个人支出记录与统计工具。", color = scheme.onSurface)
                     Text("开发者：wchaoq", color = scheme.onSurfaceVariant)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painterResource(R.drawable.ic_ai),
+                            contentDescription = null,
+                            tint = scheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(Modifier.size(8.dp))
+                        Text("AI 协助：ChatGPT", color = scheme.onSurfaceVariant)
+                    }
                     Text("界面设计：Material 3", color = scheme.onSurfaceVariant)
                     Text("版本 1.0.1", color = scheme.onSurfaceVariant)
                 }
