@@ -176,7 +176,7 @@ fun AccountingApp(
                 NavigationBarItem(
                     selected = tab == 1,
                     onClick = { tab = 1 },
-                    icon = { Icon(painterResource(R.drawable.ic_bar_chart), contentDescription = null) },
+                    icon = { Icon(painterResource(R.drawable.ic_stats), contentDescription = null) },
                     label = { Text("统计") }
                 )
             }
