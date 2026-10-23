@@ -53,16 +53,11 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
-
-      - name: Bootstrap Gradle Wrapper
-        run: |
-          if [ ! -f gradle/wrapper/gradle-wrapper.jar ]; then
-            gradle wrapper --gradle-version 8.9
-          fi
-          chmod +x ./gradlew
+        with:
+          gradle-version: "8.9"
 
       - name: Run tests and build debug/release APKs
-        run: ./gradlew :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease --stacktrace --no-daemon
+        run: gradle :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease --stacktrace --no-daemon
 
       - name: Upload debug APK
         if: success()
