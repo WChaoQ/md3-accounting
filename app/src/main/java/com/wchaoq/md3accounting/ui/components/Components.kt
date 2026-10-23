@@ -43,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import com.wchaoq.md3accounting.R
 import com.wchaoq.md3accounting.data.Expense
@@ -164,7 +165,8 @@ fun BarChart(
     labels: (Int) -> String,
     highlightIndex: Int,
     onBarClick: (Int) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    chartHeight: Dp = 150.dp
 ) {
     val n = values.size.coerceAtLeast(1)
     val currentOnBarClick = rememberUpdatedState(onBarClick)
@@ -187,7 +189,7 @@ fun BarChart(
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(150.dp)
+            .height(chartHeight)
             .pointerInput(n) {
                 detectTapGestures { offset ->
                     val idx = ((offset.x / size.width) * n).toInt().coerceIn(0, n - 1)
