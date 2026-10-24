@@ -86,9 +86,8 @@ class AccountingViewModel(
     private val snackChannel = Channel<SnackEvent>(Channel.BUFFERED)
     val snackEvents = snackChannel.receiveAsFlow()
 
-    val themeState: StateFlow<ThemeUiState> = themeStore.theme
-        .map { ThemeUiState(prefs = it, ready = true) }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, ThemeUiState(ready = false))
+    private val _themeState = MutableStateFlow(ThemeUiState(ready = false))
+    val themeState: StateFlow<ThemeUiState> = _themeState
 
     private val monthRange = yearMonth.map { it.startDateInt() to it.endDateInt() }
 
@@ -178,6 +177,11 @@ class AccountingViewModel(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), StatsUiState())
 
     init {
+        viewModelScope.launch {
+            themeStore.theme.collect { prefs ->
+                _themeState.value = ThemeUiState(prefs = prefs, ready = true)
+            }
+        }
         viewModelScope.launch {
             repo.migrateFromLegacyIfNeeded()
         }
@@ -359,9 +363,17 @@ class AccountingViewModel(
     }
 
     fun toggleDark(systemDark: Boolean) {
+        val current = _themeState.value
+        val effective = current.prefs.dark ?: systemDark
+        val nextDark = !effective
+
+        // Update the UI immediately; persist the preference asynchronously.
+        _themeState.value = current.copy(
+            prefs = current.prefs.copy(dark = nextDark),
+            ready = true
+        )
         viewModelScope.launch {
-            val effective = themeState.value.prefs.dark ?: systemDark
-            themeStore.setDark(!effective)
+            themeStore.setDark(nextDark)
         }
     }
 

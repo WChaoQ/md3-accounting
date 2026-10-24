@@ -7,7 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.wchaoq.md3accounting.data.ExpenseRepository
@@ -41,8 +41,9 @@ class MainActivity : ComponentActivity() {
                     android.graphics.Color.TRANSPARENT
                 )
             }
-            SideEffect {
+            DisposableEffect(dark) {
                 enableEdgeToEdge(statusBarStyle = barStyle, navigationBarStyle = barStyle)
+                onDispose { }
             }
 
             MD3AccountingTheme(

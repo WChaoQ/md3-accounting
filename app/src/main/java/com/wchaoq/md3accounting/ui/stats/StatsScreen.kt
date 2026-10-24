@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.wchaoq.md3accounting.R
@@ -181,34 +182,21 @@ fun StatsScreen(
                     fontWeight = FontWeight.SemiBold,
                     color = scheme.onSurface
                 )
-                Text(
-                    when {
-                        selectedDayIndex < 0 -> "先选择上方日期，再展开查看当天记录"
-                        showDetails -> "显示所选日期的支出记录"
-                        else -> "已选中日期，点击“展开明细”查看记录"
-                    },
-                    style = MaterialTheme.typography.bodySmall,
-                    color = scheme.onSurfaceVariant.copy(alpha = 0.9f)
-                )
             }
             TextButton(
                 onClick = { showDetails = !showDetails },
                 enabled = selectedDayIndex >= 0
             ) {
                 Text(if (showDetails) "收起明细" else "展开明细")
+                Icon(
+                    painterResource(R.drawable.ic_expand_more),
+                    contentDescription = null,
+                    modifier = Modifier.rotate(if (showDetails) 180f else 0f)
+                )
             }
         }
 
-        if (selectedDayIndex < 0 || !showDetails) {
-            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                Text(
-                    if (selectedDayIndex < 0) "点击每日支出的柱形选择日期"
-                    else "点击“展开明细”查看当天支出",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = scheme.onSurfaceVariant
-                )
-            }
-        } else if (state.dayItems.isEmpty()) {
+        if (selectedDayIndex >= 0 && showDetails && state.dayItems.isEmpty()) {
             Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
                 Text(
                     "当天暂无支出记录",
@@ -216,7 +204,7 @@ fun StatsScreen(
                     color = scheme.onSurfaceVariant
                 )
             }
-        } else {
+        } else if (selectedDayIndex >= 0 && showDetails) {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 state.dayItems.forEach { expense ->
                     Column {
