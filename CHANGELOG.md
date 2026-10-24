@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.5 (2026-10-24)
+
+- Correct the launcher wordmark's optical vertical alignment.
+- Keep the data-management action represented by a clear database glyph.
+- Keep the existing screens and features unchanged.
+- Publish installable debug and release APKs through GitHub Actions.
+
 ## 1.0.1 (2026-10-23)
 
 - Improve the home calendar density and selected/today visual hierarchy.
