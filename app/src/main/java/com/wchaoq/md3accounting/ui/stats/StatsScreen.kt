@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -46,7 +47,11 @@ fun StatsScreen(
     val ym = state.yearMonth
     val scheme = MaterialTheme.colorScheme
     var selectedDayIndex by remember(ym) { mutableIntStateOf(-1) }
-    LaunchedEffect(state.statsYear) { selectedDayIndex = -1 }
+    var showDetails by remember(ym) { mutableStateOf(false) }
+    LaunchedEffect(state.statsYear) {
+        selectedDayIndex = -1
+        showDetails = false
+    }
 
     Column(
         modifier = Modifier
@@ -63,10 +68,10 @@ fun StatsScreen(
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.weight(1f)
                     )
-                    IconButton(onClick = { selectedDayIndex = -1; onChangeMonth(-1) }) {
+                    IconButton(onClick = { selectedDayIndex = -1; showDetails = false; onChangeMonth(-1) }) {
                         Icon(painterResource(R.drawable.ic_chevron_left), "上个月")
                     }
-                    IconButton(onClick = { selectedDayIndex = -1; onChangeMonth(1) }) {
+                    IconButton(onClick = { selectedDayIndex = -1; showDetails = false; onChangeMonth(1) }) {
                         Icon(painterResource(R.drawable.ic_chevron_right), "下个月")
                     }
                 }
@@ -98,8 +103,10 @@ fun StatsScreen(
                     highlightIndex = selectedDayIndex,
                     chartHeight = 136.dp,
                     onBarClick = { index ->
-                        selectedDayIndex = if (selectedDayIndex == index) -1 else index
-                        if (selectedDayIndex >= 0) onPickDay(index)
+                        // A chart tap only selects the date; the dedicated button controls detail visibility.
+                        selectedDayIndex = index
+                        showDetails = false
+                        onPickDay(index)
                     }
                 )
             }
@@ -113,10 +120,10 @@ fun StatsScreen(
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.weight(1f)
                     )
-                    IconButton(onClick = { onStepYear(-1) }) {
+                    IconButton(onClick = { selectedDayIndex = -1; showDetails = false; onStepYear(-1) }) {
                         Icon(painterResource(R.drawable.ic_chevron_left), "上一年")
                     }
-                    IconButton(onClick = { onStepYear(1) }) {
+                    IconButton(onClick = { selectedDayIndex = -1; showDetails = false; onStepYear(1) }) {
                         Icon(painterResource(R.drawable.ic_chevron_right), "下一年")
                     }
                 }
@@ -149,6 +156,7 @@ fun StatsScreen(
                     chartHeight = 112.dp,
                     onBarClick = { index ->
                         selectedDayIndex = -1
+                        showDetails = false
                         onOpenMonth(index)
                     }
                 )
@@ -174,17 +182,28 @@ fun StatsScreen(
                     color = scheme.onSurface
                 )
                 Text(
-                    if (selectedDayIndex >= 0) "再次点击当前日期可收起" else "选择柱形查看当天记录",
+                    when {
+                        selectedDayIndex < 0 -> "先选择上方日期，再展开查看当天记录"
+                        showDetails -> "显示所选日期的支出记录"
+                        else -> "已选中日期，点击“展开明细”查看记录"
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = scheme.onSurfaceVariant.copy(alpha = 0.9f)
                 )
             }
+            TextButton(
+                onClick = { showDetails = !showDetails },
+                enabled = selectedDayIndex >= 0
+            ) {
+                Text(if (showDetails) "收起明细" else "展开明细")
+            }
         }
 
-        if (selectedDayIndex < 0) {
+        if (selectedDayIndex < 0 || !showDetails) {
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Text(
-                    "选择日期查看支出明细",
+                    if (selectedDayIndex < 0) "点击每日支出的柱形选择日期"
+                    else "点击“展开明细”查看当天支出",
                     style = MaterialTheme.typography.bodyMedium,
                     color = scheme.onSurfaceVariant
                 )
