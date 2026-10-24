@@ -57,6 +57,12 @@ jobs:
         with:
           gradle-version: "8.9"
 
+      - name: Clean previous build outputs
+        run: |
+          gradle --stop || true
+          rm -rf app/build build
+          gradle clean --no-daemon --max-workers=1
+
       - name: Run unit tests and build debug/release APKs
         run: gradle :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease --stacktrace --no-daemon --max-workers=1
 
