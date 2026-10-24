@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.6 (2026-10-24)
+
+- Replace the launcher artwork with the supplied SVG geometry and colors, without an extra foreground scale or translation.
+- Update the top-bar data action to use the Material Symbols Outlined database glyph.
+- Apply edge-to-edge system bar styles as a Compose side effect so the status/navigation bars track theme changes promptly.
+- Preserve existing screens, layouts, and features.
+
 ## 1.0.5 (2026-10-24)
 
 - Correct the launcher wordmark's optical vertical alignment.
